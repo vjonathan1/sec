@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who’s going to Atlanta? 2026 SEC title race simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap">
+<style>
+:root{
+  --bg:#EDF1EB; --surface:#FFFFFF; --surface-2:#F5F8F3; --ink:#16231C; --ink-2:#4F6056; --ink-3:#7A8A80;
+  --line:#D2DBD3; --line-2:#E3E9E3;
+  --field:#1F5E3E; --field-2:#235F41; --field-3:#1B5638; --field-line:rgba(255,255,255,.13); --field-ink:#F1F6F1; --field-ink-2:#BFD6C6;
+  --turf:#1E5A3C; --turf-ink:#FFFFFF; --turf-soft:#E0EBE3;
+  --gold:#B8860B; --gold-soft:#F5E6BC; --gold-ink:#5B4300;
+  --paper:#FFFFFF; --paper-2:#F3F6F1; --paper-ink:#14201A; --paper-ink-2:#506057; --hatch:rgba(30,90,60,.055);
+  --chip-ring:rgba(0,0,0,0); --on-gold:#241900; --focus:#1E5A3C; --warn:#9A3412; --warn-soft:#FCEBDD;
+  --shadow:0 1px 0 rgba(20,32,26,.06), 0 10px 30px -18px rgba(20,32,26,.35);
+  --display:"Big Shoulders Display","Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --text:"Barlow","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1611; --surface:#13201A; --surface-2:#182920; --ink:#E5EDE7; --ink-2:#A2B4A9; --ink-3:#77897E;
+    --line:#26392F; --line-2:#1E3027;
+    --field:#143D29; --field-2:#17432D; --field-3:#123825; --field-line:rgba(255,255,255,.09); --field-ink:#EAF2EC; --field-ink-2:#A9C4B2;
+    --turf:#4C9B71; --turf-ink:#06120B; --turf-soft:#1B3427;
+    --gold:#E2B53E; --gold-soft:#3A3013; --gold-ink:#F2D27B;
+    --paper:#E3E9DF; --paper-2:#D7DFD3; --paper-ink:#13201A; --paper-ink-2:#4B5B52; --hatch:rgba(30,90,60,.08);
+    --chip-ring:rgba(255,255,255,.28); --on-gold:#241900; --focus:#86D0A6; --warn:#F2A27B; --warn-soft:#3A2116;
+    --shadow:0 1px 0 rgba(0,0,0,.4), 0 14px 34px -20px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1611; --surface:#13201A; --surface-2:#182920; --ink:#E5EDE7; --ink-2:#A2B4A9; --ink-3:#77897E;
+  --line:#26392F; --line-2:#1E3027;
+  --field:#143D29; --field-2:#17432D; --field-3:#123825; --field-line:rgba(255,255,255,.09); --field-ink:#EAF2EC; --field-ink-2:#A9C4B2;
+  --turf:#4C9B71; --turf-ink:#06120B; --turf-soft:#1B3427;
+  --gold:#E2B53E; --gold-soft:#3A3013; --gold-ink:#F2D27B;
+  --paper:#E3E9DF; --paper-2:#D7DFD3; --paper-ink:#13201A; --paper-ink-2:#4B5B52; --hatch:rgba(30,90,60,.08);
+  --chip-ring:rgba(255,255,255,.28); --on-gold:#241900; --focus:#86D0A6; --warn:#F2A27B; --warn-soft:#3A2116;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 14px 34px -20px rgba(0,0,0,.8);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 56px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.45;font-variant-numeric:tabular-nums}
+img,svg{max-width:100%}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* ---------- Field hero ---------- */
+.field{
+  color:var(--field-ink);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,0) 40%),
+    repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), var(--field-line) calc(10% - 2px) 10%),
+    repeating-linear-gradient(90deg, var(--field) 0 10%, var(--field-3) 10% 20%);
+  padding:40px 0 34px;
+  overflow:hidden;
+}
+.hero-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 32px;margin-bottom:26px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(2.6rem,6.2vw,4.4rem);line-height:.92;letter-spacing:.005em;margin:0;max-width:12ch}
+.lede{margin:12px 0 0;max-width:46ch;color:var(--field-ink-2);font-size:1.06rem}
+.status{margin:0;max-width:34ch;color:var(--field-ink);font-size:.98rem;text-align:right}
+.status b{font-weight:700}
+.status .changed{display:block;color:var(--gold);font-weight:600}
+
+/* ---------- Ticket ---------- */
+.ticket{
+  --tk-r:12px;
+  position:relative;display:grid;grid-template-columns:1fr 8.6rem;
+  background:var(--paper);color:var(--paper-ink);border-radius:var(--tk-r);
+  --h1x:calc(100% - 8.6rem);--h1y:0px;--h2x:calc(100% - 8.6rem);--h2y:100%;
+  -webkit-mask-image:radial-gradient(circle 12px at var(--h1x) var(--h1y),transparent 11.5px,#000 12px),radial-gradient(circle 12px at var(--h2x) var(--h2y),transparent 11.5px,#000 12px);
+  mask-image:radial-gradient(circle 12px at var(--h1x) var(--h1y),transparent 11.5px,#000 12px),radial-gradient(circle 12px at var(--h2x) var(--h2y),transparent 11.5px,#000 12px);
+  -webkit-mask-composite:source-in;mask-composite:intersect;
+  background-image:
+    repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 7px);
+  animation:issue 900ms cubic-bezier(.2,.75,.2,1) both;
+}
+@keyframes issue{from{clip-path:inset(0 0 100% 0);transform:translateY(-18px)}to{clip-path:inset(0 0 0 0);transform:none}}
+.tk-main{display:grid;grid-template-columns:1fr minmax(12rem,15rem) 1fr;min-width:0}
+.tk-team{display:grid;grid-template-rows:auto 1fr;min-width:0}
+.tk-team.home .tk-band{border-top-left-radius:var(--tk-r)}
+.tk-band{
+  background:var(--tc,#555);color:var(--tt,#fff);height:8.4rem;display:grid;place-items:center;position:relative;overflow:hidden;
+  transition:background-color 500ms ease;
+}
+.tk-band::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 2px,transparent 2px 22px);pointer-events:none}
+.tk-mono{font-family:var(--display);font-weight:900;font-size:clamp(3.2rem,6vw,5rem);line-height:1;letter-spacing:.02em}
+.tk-info{padding:14px 18px 18px;display:grid;gap:2px;align-content:start}
+.tk-seed{font-size:.86rem;color:var(--paper-ink-2);font-weight:600}
+.tk-name{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,2.6vw,2.15rem);line-height:1}
+.tk-rec{font-size:.95rem;color:var(--paper-ink-2)}
+.tk-team.away .tk-info{text-align:right}
+.tk-center{display:grid;align-content:center;justify-items:center;text-align:center;padding:18px 14px;border-left:1px solid rgba(20,32,26,.12);border-right:1px solid rgba(20,32,26,.12)}
+.tk-event{font-family:var(--display);font-weight:800;font-size:1.55rem;line-height:1.02;margin:0;max-width:10ch}
+.tk-vs{font-family:var(--display);font-weight:900;font-size:3.2rem;line-height:1;margin:10px 0 8px;color:var(--paper-ink)}
+.tk-when{margin:0;font-size:.9rem;color:var(--paper-ink-2);line-height:1.38;white-space:nowrap}
+.tk-stub{
+  position:relative;border-left:2px dashed rgba(20,32,26,.28);padding:16px 14px;display:grid;align-content:space-between;gap:10px;
+  background:var(--paper-2);border-top-right-radius:var(--tk-r);border-bottom-right-radius:var(--tk-r)
+}
+.tk-admit{font-family:var(--display);font-weight:800;font-size:1.25rem;line-height:1}
+.tk-left{font-size:.86rem;color:var(--paper-ink-2);line-height:1.3}
+.tk-left b{display:block;font-family:var(--display);font-size:2.2rem;line-height:1;color:var(--paper-ink)}
+.tk-bar{height:34px;background:repeating-linear-gradient(90deg,var(--paper-ink) 0 2px,transparent 2px 4px,var(--paper-ink) 4px 5px,transparent 5px 8px,var(--paper-ink) 8px 11px,transparent 11px 13px);opacity:.75}
+.ticket-wrap{filter:drop-shadow(0 2px 0 rgba(0,0,0,.2)) drop-shadow(0 20px 22px rgba(0,0,0,.35))}
+.reprint{animation:reprint 620ms cubic-bezier(.2,.8,.2,1) both}
+@keyframes reprint{0%{opacity:0;transform:translateY(12px) scale(.97);filter:blur(5px)}55%{opacity:1;filter:blur(0)}100%{transform:none}}
+.why{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin:18px 4px 0;color:var(--field-ink-2);font-size:.95rem}
+.why p{margin:0}
+.why b{color:var(--field-ink);font-weight:600}
+.why .away-why{text-align:right}
+
+/* ---------- Main layout ---------- */
+.tabs{display:none}
+main{padding:28px 0 64px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;align-items:start}
+.side{position:sticky;top:16px;display:grid;gap:22px}
+h2{font-family:var(--display);font-weight:800;font-size:1.9rem;line-height:1;margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+/* ---------- Controls ---------- */
+.games-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.games-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-bottom:10px}
+.hint{margin:0 0 18px;font-size:.88rem;color:var(--ink-3)}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;padding:7px 12px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.92rem;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--turf);color:var(--turf-ink)}
+.seg .n{font-weight:500;opacity:.8;margin-left:4px}
+.sel{appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23889' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:10px;padding:8px 34px 8px 12px;font-weight:600;font-size:.92rem;cursor:pointer}
+.btn-quiet{border:1px solid var(--line);background:transparent;border-radius:10px;padding:8px 12px;font-weight:600;font-size:.92rem;cursor:pointer;color:var(--ink-2)}
+.btn-quiet:hover{background:var(--surface)}
+
+/* ---------- Game list ---------- */
+.week{margin:0 0 22px}
+.week-h{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;padding:0 2px}
+.week-h h3{font-family:var(--display);font-weight:800;font-size:1.3rem;margin:0}
+.week-h span{color:var(--ink-3);font-size:.9rem}
+.glist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.game{display:grid;grid-template-columns:minmax(0,1fr) 5.6rem minmax(0,1fr);align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.game.final{background:var(--surface-2)}
+.pick{
+  --tc:#555;--tt:#fff;
+  display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:0;background:transparent;cursor:pointer;text-align:left;min-width:0;
+  transition:background-color 220ms ease,color 220ms ease,opacity 220ms ease;
+}
+.pick.home{flex-direction:row-reverse;text-align:right}
+.pick:hover{background:var(--line-2)}
+.pick[aria-pressed="true"]{background:var(--tc);color:var(--tt)}
+.pick[aria-pressed="true"] .prec{color:inherit;opacity:.85}
+.pick.lost{opacity:.5}
+.pick .pn{display:grid;min-width:0;line-height:1.15}
+.pname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prec{font-size:.82rem;color:var(--ink-3)}
+.chip{flex:none;display:inline-grid;place-items:center;min-width:2.9rem;height:1.9rem;padding:0 6px;border-radius:6px;background:var(--tc);color:var(--tt);font-family:var(--display);font-weight:800;font-size:.98rem;letter-spacing:.02em;box-shadow:inset 0 0 0 1px var(--chip-ring)}
+.pick[aria-pressed="true"] .chip{box-shadow:inset 0 0 0 1.5px currentColor}
+.check{flex:none;width:18px;height:18px;margin-left:auto;opacity:0;transform:scale(.4);transition:opacity 200ms,transform 260ms cubic-bezier(.3,1.6,.5,1)}
+.pick.home .check{margin-left:0;margin-right:auto}
+.pick[aria-pressed="true"] .check{opacity:1;transform:none}
+.pick:active{transform:scale(.985)}
+.mid{display:grid;align-content:center;justify-items:center;gap:2px;padding:6px 4px;border-left:1px solid var(--line-2);border-right:1px solid var(--line-2);text-align:center}
+.at{font-size:.8rem;color:var(--ink-3);line-height:1.1}
+.sc{font-family:var(--display);font-weight:800;font-size:1.15rem;line-height:1}
+.sc.muted{color:var(--ink-3);font-family:var(--text);font-weight:500;font-size:.82rem}
+.linkbtn{border:0;background:none;padding:2px 4px;font-size:.78rem;color:var(--turf);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.mid .linkbtn{color:var(--ink-3);font-weight:500}
+.mid .linkbtn:hover{color:var(--turf)}
+.foot{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:0 12px;font-size:.84rem;color:var(--ink-2)}
+.foot:not(:empty){padding:8px 12px;border-top:1px solid var(--line-2)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;background:var(--turf-soft);color:var(--ink);font-weight:600;font-size:.78rem}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.scoreed{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.scoreed label{display:inline-flex;align-items:center;gap:6px}
+.scoreed input{width:4.2rem;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-variant-numeric:tabular-nums}
+.err{color:var(--warn);font-weight:600}
+.empty{padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--ink-2);text-align:center;background:var(--surface)}
+
+/* ---------- Standings ---------- */
+.stand-card{padding:18px 18px 14px}
+.stand-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.stand-head span{font-size:.85rem;color:var(--ink-3)}
+.cols,.srow{display:grid;grid-template-columns:2.9rem minmax(0,1fr) 2.8rem 3rem 2.1rem;align-items:center;gap:6px}
+.cols{font-size:.78rem;color:var(--ink-3);padding:0 6px 6px;border-bottom:1px solid var(--line)}
+.cols span:nth-child(n+3){text-align:right}
+.stand{list-style:none;margin:0;padding:0;position:relative}
+.srow{padding:7px 6px;border-bottom:1px solid var(--line-2);position:relative;background:var(--surface);cursor:pointer;will-change:transform}
+.srow:hover .tname{text-decoration:underline;text-underline-offset:2px}
+.srow.seed{background:linear-gradient(90deg,var(--gold-soft),transparent 75%)}
+.srow.seed::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--gold)}
+.srow.cut{border-bottom:2px solid var(--gold)}
+.rk{font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--ink-2);white-space:nowrap}
+.tm{display:flex;align-items:center;gap:8px;min-width:0}
+.tm .chip{min-width:2.6rem;height:1.6rem;font-size:.86rem}
+.tname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sd{font-size:.7rem;font-weight:700;margin-left:auto;color:var(--gold-ink);background:var(--gold-soft);border-radius:999px;padding:1px 7px;flex:none}
+.wl,.pc,.lf{text-align:right}
+.wl{font-weight:700}
+.pc{color:var(--ink-2)}
+.lf{color:var(--ink-3)}
+.bump{animation:bump 700ms ease}
+@keyframes bump{0%{background:var(--gold-soft);border-radius:4px}100%{background:transparent}}
+.stand-note{margin:10px 2px 0;font-size:.8rem;color:var(--ink-3)}
+.mk{flex:none;display:inline-grid;place-items:center;width:1.15rem;height:1.15rem;border-radius:4px;font-family:var(--display);font-weight:800;font-size:.78rem;line-height:1;margin-left:2px}
+.mk[hidden]{display:none}
+.mk-x,.mk-z{background:var(--gold);color:var(--on-gold)}
+.mk-e{background:var(--line);color:var(--ink-3)}
+.stand.busy .mk{opacity:.35}
+.srow.out .tname{color:var(--ink-3)}
+/* Race card */
+.race-card{padding:18px}
+.race-card h2{font-size:1.55rem;margin-bottom:6px}
+.race-sub{margin:0 0 12px;font-size:.84rem;color:var(--ink-2)}
+.race{list-style:none;margin:0;padding:0;display:grid;gap:9px;transition:opacity 200ms}
+.race-card.busy .race{opacity:.5}
+.rr{display:grid;grid-template-columns:minmax(0,1fr) 3.6rem;gap:3px 10px;align-items:center}
+.rr .who{display:flex;align-items:center;gap:8px;min-width:0}
+.rr .who .chip{min-width:2.6rem;height:1.6rem;font-size:.86rem}
+.rr .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr .st{font-size:.76rem;color:var(--ink-3);white-space:nowrap}
+.rr .st.good{color:var(--gold-ink);font-weight:700}
+.rr .pc2{text-align:right;font-family:var(--display);font-weight:800;font-size:1.15rem}
+.rr .bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--line-2);position:relative;overflow:hidden}
+.rr .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;transition:width 500ms cubic-bezier(.2,.8,.2,1)}
+.rr .bar .b1{background:var(--gold)}
+.rr .bar .b2{background:var(--turf)}
+.race-foot{margin:12px 0 0;font-size:.82rem;color:var(--ink-3)}
+.race-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:10px 0 0;font-size:.78rem;color:var(--ink-3)}
+.race-legend span::before{content:"";display:inline-block;width:10px;height:6px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--gold)}
+.race-legend span.n1::before{background:var(--turf)}
+.prog{height:3px;border-radius:2px;background:var(--line-2);margin:0 0 10px;overflow:hidden;opacity:0;transition:opacity 200ms}
+.race-card.busy .prog{opacity:1}
+.prog i{display:block;height:100%;width:0;background:var(--turf);transition:width 150ms linear}
+/* Projections on game rows */
+.proj{flex:1 1 100%;display:grid;gap:5px}
+.proj .ptxt{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:.82rem}
+.proj .ptxt b{font-weight:700;color:var(--ink)}
+.proj .ptxt .src{color:var(--ink-3)}
+.proj .ptxt .src.old{color:var(--warn)}
+.pbar{display:flex;height:5px;border-radius:3px;overflow:hidden;background:var(--line-2)}
+.pbar i{display:block;height:100%}
+.btn-quiet[aria-pressed="true"]{background:var(--turf-soft);color:var(--ink);border-color:var(--turf)}
+.title-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tk-clinch{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--gold);color:var(--on-gold);font-size:.72rem;font-weight:700;vertical-align:1px}
+details.about table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:10px}
+details.about th,details.about td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line-2);vertical-align:top}
+details.about td.num{text-align:right;white-space:nowrap}
+.srcwrap{overflow-x:auto}
+
+/* ---------- Tiebreaker log ---------- */
+.tb-card{padding:18px}
+.tb-card h2{font-size:1.55rem;margin-bottom:12px}
+.log{display:grid;gap:6px}
+.lg{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;line-height:1.35}
+.lg .st{flex:none;display:inline-grid;place-items:center;width:1.45rem;height:1.45rem;border-radius:5px;background:var(--turf);color:var(--turf-ink);font-family:var(--display);font-weight:800;font-size:.85rem;margin-top:-1px}
+.lg .st.blank{background:transparent}
+.lg.head{font-weight:700;margin-top:6px}
+.lg.win{color:var(--gold-ink);font-weight:600}
+.lg.win .st{background:var(--gold);color:var(--on-gold)}
+.lg.note{color:var(--ink-2)}
+.flag.info{background:var(--turf-soft);color:var(--ink-2)}
+.flag{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:.86rem}
+.flag button{margin-left:6px}
+.keylist{margin:14px 0 0;padding:12px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:1.45rem 1fr;gap:5px 8px;font-size:.82rem;color:var(--ink-2)}
+.keylist dt{display:inline-grid;place-items:center;width:1.45rem;height:1.45rem;border-radius:5px;border:1px solid var(--line);font-family:var(--display);font-weight:800;color:var(--ink)}
+.keylist dd{margin:0;align-self:center}
+
+/* ---------- Notes ---------- */
+details.about{padding:14px 18px}
+details.about summary{cursor:pointer;font-weight:700}
+details.about p{font-size:.86rem;color:var(--ink-2);margin:10px 0 0;max-width:62ch}
+
+/* ---------- Mobile ---------- */
+.mbar{display:none}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,140%);background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:12px;display:flex;align-items:center;gap:12px;font-size:.92rem;box-shadow:var(--shadow);transition:transform 320ms cubic-bezier(.2,.8,.2,1);z-index:30}
+.toast.show{transform:translate(-50%,0)}
+.toast button{border:0;background:var(--gold);color:var(--on-gold);font-weight:700;border-radius:8px;padding:6px 10px;cursor:pointer}
+
+@media (max-width: 899px){
+  .wrap{padding:0 14px}
+  .field{padding:26px 0 24px}
+  .status{text-align:left}
+  .ticket{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .tk-main{grid-template-columns:1fr}
+  .tk-team{grid-template-columns:6.4rem 1fr;grid-template-rows:auto}
+  .tk-team.home .tk-band{border-top-left-radius:var(--tk-r)}
+  .tk-band{height:auto;min-height:6.2rem}
+  .tk-mono{font-size:2.5rem}
+  .tk-info{align-content:center}
+  .tk-team.away{grid-template-columns:1fr 6.4rem}
+  .tk-team.away .tk-band{order:2}
+  .tk-center{border:0;border-top:1px solid rgba(20,32,26,.12);border-bottom:1px solid rgba(20,32,26,.12);padding:12px;grid-template-columns:auto auto;gap:4px 16px;align-items:center}
+  .tk-event{grid-column:1;max-width:none;font-size:1.25rem;text-align:left}
+  .tk-vs{grid-column:2;grid-row:1/3;font-size:2.4rem;margin:0}
+  .tk-when{grid-column:1;text-align:left;font-size:.82rem}
+  .tk-stub{border-left:0;border-top:2px dashed rgba(20,32,26,.28);border-radius:0 0 var(--tk-r) var(--tk-r);grid-template-columns:auto 1fr auto;align-items:center;padding:12px 16px}
+  .tk-left{text-align:center}
+  .tk-left b{display:inline;font-size:1.4rem;margin-right:4px}
+  .tk-bar{width:70px;height:26px}
+  .why{grid-template-columns:1fr}
+  .why .away-why{text-align:left}
+
+  .tabs{display:flex;gap:4px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding:10px 14px;border-bottom:1px solid var(--line);margin:0 -14px}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+  .tabs button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 6px;font-weight:700;font-size:.92rem;cursor:pointer;color:var(--ink-2)}
+  .tabs button[aria-selected="true"]{background:var(--turf);color:var(--turf-ink);border-color:var(--turf)}
+  main{padding-top:0}
+  .layout{grid-template-columns:1fr;gap:0}
+  .side{position:static;display:block}
+  .panel{display:none;padding-top:16px}
+  .panel.active{display:block}
+  .side .panel.active + .panel.active{margin-top:16px}
+  .stand-card{padding:16px 14px 12px}
+  .cols,.srow{grid-template-columns:2.4rem minmax(0,1fr) 2.5rem 2.7rem 1.8rem;gap:4px}
+  .tm{gap:6px}
+  .tm .chip{min-width:2.3rem;height:1.5rem;font-size:.8rem;padding:0 4px}
+  .tname{font-size:.95rem}
+  .race-card{padding:16px 14px}
+  .game{grid-template-columns:minmax(0,1fr) 3.6rem minmax(0,1fr)}
+  .pick{position:relative;flex-direction:column;align-items:flex-start;gap:5px;padding:10px 10px;min-height:76px}
+  .pick.home{flex-direction:column;align-items:flex-end}
+  .pick .check{position:absolute;top:10px;right:10px;margin:0}
+  .pick.home .check{right:auto;left:10px}
+  .chip{min-width:2.5rem;font-size:.9rem}
+  .pname{font-size:.92rem}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:25;align-items:center;justify-content:center;gap:10px;padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -10px 30px -20px rgba(0,0,0,.5);font-weight:700;transform:translateY(110%);transition:transform 300ms ease}
+  .mbar.show{transform:none}
+  .mbar .lbl{font-weight:500;color:var(--ink-3);font-size:.86rem}
+  main{padding-bottom:96px}
+}
+@media (max-width: 380px){
+  .cols,.srow{grid-template-columns:2.3rem minmax(0,1fr) 2.5rem 2.7rem}
+  .srow .lf,.cols span:nth-child(5){display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}
+}
+</style>
+</head>
+<body>
+<header class="field">
+  <div class="wrap">
+    <div class="hero-top">
+      <div>
+        <h1>Who’s going to Atlanta?</h1>
+        <p class="lede">Pick the rest of the 2026 SEC season. Standings and the conference’s official tiebreakers update with every click.</p>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+
+    <div class="ticket-wrap"><section class="ticket" id="ticket" aria-label="Projected SEC Championship Game">
+      <div class="tk-main">
+        <div class="tk-team home" id="tkHome">
+          <div class="tk-band"><span class="tk-mono"></span></div>
+          <div class="tk-info"><span class="tk-seed">No. 1 seed, home team</span><span class="tk-name"></span><span class="tk-rec"></span></div>
+        </div>
+        <div class="tk-center">
+          <p class="tk-event">SEC Championship Game</p>
+          <p class="tk-vs" aria-hidden="true">vs.</p>
+          <p class="tk-when">Saturday, Dec. 5, 2026<br>4 p.m. ET on ABC<br>Mercedes-Benz Stadium<br>Atlanta</p>
+        </div>
+        <div class="tk-team away" id="tkAway">
+          <div class="tk-band"><span class="tk-mono"></span></div>
+          <div class="tk-info"><span class="tk-seed">No. 2 seed, away team</span><span class="tk-name"></span><span class="tk-rec"></span></div>
+        </div>
+      </div>
+      <div class="tk-stub">
+        <span class="tk-admit">Admit one</span>
+        <span class="tk-left" id="tkLeft"></span>
+        <span class="tk-bar" aria-hidden="true"></span>
+      </div>
+    </section></div>
+    <div class="why" aria-live="polite"><p id="why1"></p><p id="why2" class="away-why"></p></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-games" aria-controls="p-games" aria-selected="true" data-tab="games">Games</button>
+      <button role="tab" id="tab-stand" aria-controls="p-stand" aria-selected="false" data-tab="stand">Standings</button>
+      <button role="tab" id="tab-tb" aria-controls="p-tb" aria-selected="false" data-tab="tb">Tiebreakers</button>
+    </nav>
+    <div class="layout">
+      <section class="panel active" id="p-games" role="tabpanel" aria-labelledby="tab-games" data-panel="games">
+        <div class="games-title"><h2>Games</h2><div class="title-actions"><button class="btn-quiet" id="fillFav">Pick FPI favorites</button><button class="btn-quiet" id="startOver">Start over</button></div></div>
+        <div class="games-head">
+          <div class="seg" role="group" aria-label="Which games to show">
+            <button data-filter="remaining" aria-pressed="true">Remaining<span class="n" id="nRem"></span></button>
+            <button data-filter="all" aria-pressed="false">All<span class="n">72</span></button>
+            <button data-filter="changed" aria-pressed="false">Changed<span class="n" id="nChg"></span></button>
+          </div>
+          <label class="vh" for="teamSel">Show games for</label>
+          <select class="sel" id="teamSel"></select>
+          <button class="btn-quiet" id="projToggle" aria-pressed="true">FPI odds</button>
+        </div>
+        <p class="hint">Tap a team to pick the winner; tap it again to clear the pick. Finals can be changed too. Bars show ESPN FPI win probability for games not yet played.</p>
+        <div id="games"></div>
+      </section>
+
+      <aside class="side">
+        <section class="card stand-card panel" id="p-stand" role="tabpanel" aria-labelledby="tab-stand" data-panel="stand">
+          <div class="stand-head"><h2>Standings</h2><span>SEC games only</span></div>
+          <div class="cols" aria-hidden="true"><span>#</span><span>Team</span><span>W–L</span><span>Pct</span><span>Left</span></div>
+          <ol class="stand" id="stand" aria-label="Projected conference standings"></ol>
+          <p class="stand-note">The two gold rows meet in Atlanta, with No. 1 as the home team. Markers: x clinched a spot, z clinched the No. 1 seed, e eliminated. “Left” counts games not yet picked. Select a team to see its schedule.</p>
+        </section>
+
+        <section class="card race-card panel" id="race" data-panel="stand" aria-live="polite">
+          <h2>Race to Atlanta</h2>
+          <p class="race-sub" id="raceSub"></p>
+          <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+          <ol class="race" id="raceList"></ol>
+          <div class="race-legend"><span>Reaches Atlanta</span><span class="n1">As the No. 1 seed</span></div>
+          <p class="race-foot" id="raceFoot"></p>
+        </section>
+
+        <section class="card tb-card panel" id="p-tb" role="tabpanel" aria-labelledby="tab-tb" data-panel="tb">
+          <h2>How the top two were decided</h2>
+          <div class="log" id="log"></div>
+          <div id="flags"></div>
+          <dl class="keylist">
+            <dt>A</dt><dd>Head-to-head among the tied teams</dd>
+            <dt>B</dt><dd>Record vs. all common conference opponents</dd>
+            <dt>C</dt><dd>Record vs. the highest-placed common opponent, then down the standings</dd>
+            <dt>D</dt><dd>Cumulative conference win % of all conference opponents</dd>
+            <dt>E</dt><dd>Capped relative scoring margin (SportSource Analytics)</dd>
+            <dt>F</dt><dd>Random draw</dd>
+          </dl>
+        </section>
+
+        <details class="card about panel" data-panel="tb">
+          <summary>About the data and method</summary>
+          <p>Scores for the 44 conference games played through Oct. 31 come from published game reports. One widely used table listed LSU–Ole Miss as 34–26; the correct final, 32–24, is used here.</p>
+          <p>Rules follow the SEC tiebreaker document (Steps A–F). Before relying on an edge case, confirm the current version on secsports.com.</p>
+          <p>Standings rank by conference winning percentage using decided games only. Unpicked games are ignored, so a partial projection can shift as you keep picking.</p>
+          <p>The document governs championship-game spots only. Below second place, tied teams are ordered by head-to-head when it separates them, the same way Step C orders opponents; otherwise they share a rank.</p>
+          <p>Step E is an approximation. SportSource Analytics computes it from full-season scoring averages. This tool uses season-to-date averages from completed non-conference games plus every conference game with a score, applies the 200% offensive cap, and rounds each component to 0.1 as in the Appendix A example. Picked games without a score are left out and flagged. Add a projected score to any game to include it.</p>
+          <p>Step F is simulated with a repeatable random draw; use Redraw to try another. The team that wins a tiebreaker for first takes the No. 1 seed and is the home team.</p>
+          <p>Projections: each remaining game shows ESPN’s FPI win probability as published by the outlet and date listed below. ESPN updates FPI daily, so figures from different dates are mixed; seven predate the Oct. 31 games and are marked in orange. For four games no published figure turned up, so the probability is estimated from ESPN’s post-Week 9 FPI team ratings with P(home) = Φ((rating<sub>home</sub> − rating<sub>away</sub> + 2.2) / 14). That formula reproduces the 13 published post-Week 9 figures within 0.9 points on average (largest miss 1.9). Florida’s rating is bounded between Missouri’s and Texas A&amp;M’s from its rank.</p>
+          <p>Race to Atlanta: odds come from 10,000 simulated finishes in which each unpicked game is decided by its FPI probability, then run through the full tiebreaker procedure. With 10,000 runs, a 50% figure carries about ±1 point of sampling error. Your picks and the finals are treated as settled.</p>
+          <p>Clinched and eliminated are exact, not estimated: a team is eliminated only if no combination of unpicked results sends it to Atlanta, and clinched only if every combination does. Because Step E needs scores from games not yet played and Step F is a draw, any tie that reaches those steps counts as able to go either way. “Controls own destiny” means winning all its unpicked games guarantees a spot. If a case can’t be settled in a few seconds it is labeled pending rather than guessed.</p>
+          <p>Your picks are saved in this browser only.</p>
+          <div class="srcwrap"><table id="srcTable" aria-label="FPI projection sources"><thead><tr><th>Game</th><th>Favorite</th><th class="num">Win %</th><th>Source</th><th>Date</th></tr></thead><tbody></tbody></table></div>
+        </details>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div class="mbar" id="mbar" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastBtn">Undo</button></div>
+
+<script>
+// ===== DATA (verified Nov 5, 2026) =====
+// Sources: Wikipedia "2026 Southeastern Conference football season" (schedule + Weeks 2-8),
+// LSU-Ole Miss corrected to 32-24 (WAFB, HottyToddy, Fox/OutKick), Week 9 finals from AP/regional outlets.
+const TEAMS = {
+  ALA:  { name: "Alabama",           short: "Alabama",   abbr: "ALA",  c: "#9E1B32", t: "#FFFFFF" },
+  ARK:  { name: "Arkansas",          short: "Arkansas",  abbr: "ARK",  c: "#9D2235", t: "#FFFFFF" },
+  AUB:  { name: "Auburn",            short: "Auburn",    abbr: "AUB",  c: "#0C2340", t: "#F2A65A" },
+  FLA:  { name: "Florida",           short: "Florida",   abbr: "FLA",  c: "#0021A5", t: "#FFB38A" },
+  UGA:  { name: "Georgia",           short: "Georgia",   abbr: "UGA",  c: "#BA0C2F", t: "#FFFFFF" },
+  UK:   { name: "Kentucky",          short: "Kentucky",  abbr: "UK",   c: "#0033A0", t: "#FFFFFF" },
+  LSU:  { name: "LSU",               short: "LSU",       abbr: "LSU",  c: "#461D7C", t: "#FDD023" },
+  MSST: { name: "Mississippi State", short: "Miss. St.", abbr: "MSST", c: "#5D1725", t: "#FFFFFF" },
+  MIZ:  { name: "Missouri",          short: "Missouri",  abbr: "MIZ",  c: "#1A1A1A", t: "#F1B82D" },
+  OU:   { name: "Oklahoma",          short: "Oklahoma",  abbr: "OU",   c: "#841617", t: "#FDF9D8" },
+  MISS: { name: "Ole Miss",          short: "Ole Miss",  abbr: "MISS", c: "#14213D", t: "#F26D7D" },
+  SC:   { name: "South Carolina",    short: "S. Carolina", abbr: "SC", c: "#73000A", t: "#FFFFFF" },
+  TENN: { name: "Tennessee",         short: "Tennessee", abbr: "TENN", c: "#FF8200", t: "#1A1A1A" },
+  TEX:  { name: "Texas",             short: "Texas",     abbr: "TEX",  c: "#BF5700", t: "#FFFFFF" },
+  TAMU: { name: "Texas A&M",         short: "Texas A&M", abbr: "TAMU", c: "#500000", t: "#FFFFFF" },
+  VAN:  { name: "Vanderbilt",        short: "Vanderbilt", abbr: "VAN", c: "#1C1C1C", t: "#CFAE70" }
+};
+const TEAM_IDS = Object.keys(TEAMS);
+
+// Completed non-conference games: [points for, points against]. Used only for season scoring
+// averages in Tiebreaker E. Remaining non-conference games (Nov 21-28) are not included.
+const NONCON = {
+  ALA:  [[48,10],[50,36]],
+  ARK:  [[31,14],[10,43],[34,6]],
+  AUB:  [[17,16],[43,8]],
+  FLA:  [[66,21],[52,3]],
+  UGA:  [[63,3],[70,20]],
+  UK:   [[45,13],[45,21]],
+  LSU:  [[51,10],[45,14],[63,14]],
+  MSST: [[62,13],[38,13]],
+  MIZ:  [[54,14],[38,21],[27,17]],
+  OU:   [[51,0],[10,17],[14,6]],
+  MISS: [[41,38],[41,9]],
+  SC:   [[57,0],[45,9]],
+  TENN: [[56,9],[45,24],[42,9]],
+  TEX:  [[59,7],[24,23],[30,6]],
+  TAMU: [[50,0],[48,20],[41,0]],
+  VAN:  [[28,9],[35,26],[35,31]]
+};
+
+// Conference games. a = visitor, h = home (designated home for neutral sites).
+// fa/fh = final score (visitor/home) for games already played.
+const GAMES = [
+  // Week 2
+  { id: 1,  wk: 2,  d: "Sep 12", a: "ALA",  h: "UK",   fa: 45, fh: 17 },
+  // Week 3
+  { id: 2,  wk: 3,  d: "Sep 19", a: "UGA",  h: "ARK",  fa: 45, fh: 17 },
+  { id: 3,  wk: 3,  d: "Sep 19", a: "UK",   h: "TAMU", fa: 31, fh: 21 },
+  { id: 4,  wk: 3,  d: "Sep 19", a: "MSST", h: "SC",   fa: 41, fh: 34 },
+  { id: 5,  wk: 3,  d: "Sep 19", a: "FLA",  h: "AUB",  fa: 44, fh: 39 },
+  { id: 6,  wk: 3,  d: "Sep 19", a: "LSU",  h: "MISS", fa: 24, fh: 32 },
+  // Week 4
+  { id: 7,  wk: 4,  d: "Sep 26", a: "TEX",  h: "TENN", fa: 20, fh: 17 },
+  { id: 8,  wk: 4,  d: "Sep 26", a: "MISS", h: "FLA",  fa: 28, fh: 52 },
+  { id: 9,  wk: 4,  d: "Sep 26", a: "OU",   h: "UGA",  fa: 13, fh: 41 },
+  { id: 10, wk: 4,  d: "Sep 26", a: "VAN",  h: "AUB",  fa: 15, fh: 21 },
+  { id: 11, wk: 4,  d: "Sep 26", a: "SC",   h: "ALA",  fa: 18, fh: 49 },
+  { id: 12, wk: 4,  d: "Sep 26", a: "TAMU", h: "LSU",  fa: 6,  fh: 35 },
+  { id: 13, wk: 4,  d: "Sep 26", a: "MIZ",  h: "MSST", fa: 24, fh: 31 },
+  // Week 5
+  { id: 14, wk: 5,  d: "Oct 3",  a: "ALA",  h: "MSST", fa: 56, fh: 23 },
+  { id: 15, wk: 5,  d: "Oct 3",  a: "VAN",  h: "UGA",  fa: 14, fh: 38 },
+  { id: 16, wk: 5,  d: "Oct 3",  a: "FLA",  h: "MIZ",  fa: 17, fh: 45 },
+  { id: 17, wk: 5,  d: "Oct 3",  a: "AUB",  h: "TENN", fa: 14, fh: 24 },
+  { id: 18, wk: 5,  d: "Oct 3",  a: "UK",   h: "SC",   fa: 35, fh: 34, ot: true },
+  { id: 19, wk: 5,  d: "Oct 3",  a: "ARK",  h: "TAMU", fa: 7,  fh: 34 },
+  // Week 6
+  { id: 20, wk: 6,  d: "Oct 10", a: "TAMU", h: "MIZ",  fa: 6,  fh: 27 },
+  { id: 21, wk: 6,  d: "Oct 10", a: "SC",   h: "FLA",  fa: 38, fh: 19 },
+  { id: 22, wk: 6,  d: "Oct 10", a: "TEX",  h: "OU",   fa: 24, fh: 27, site: "Dallas" },
+  { id: 23, wk: 6,  d: "Oct 10", a: "MISS", h: "VAN",  fa: 52, fh: 17 },
+  { id: 24, wk: 6,  d: "Oct 10", a: "TENN", h: "ARK",  fa: 24, fh: 17 },
+  { id: 25, wk: 6,  d: "Oct 10", a: "LSU",  h: "UK",   fa: 34, fh: 35, ot: true },
+  { id: 26, wk: 6,  d: "Oct 10", a: "UGA",  h: "ALA",  fa: 20, fh: 17 },
+  // Week 7
+  { id: 27, wk: 7,  d: "Oct 17", a: "FLA",  h: "TEX",  fa: 27, fh: 24 },
+  { id: 28, wk: 7,  d: "Oct 17", a: "MSST", h: "LSU",  fa: 0,  fh: 31 },
+  { id: 29, wk: 7,  d: "Oct 17", a: "ALA",  h: "TENN", fa: 10, fh: 26 },
+  { id: 30, wk: 7,  d: "Oct 17", a: "AUB",  h: "UGA",  fa: 27, fh: 24 },
+  { id: 31, wk: 7,  d: "Oct 17", a: "MIZ",  h: "MISS", fa: 3,  fh: 31 },
+  { id: 32, wk: 7,  d: "Oct 17", a: "ARK",  h: "VAN",  fa: 31, fh: 21 },
+  { id: 33, wk: 7,  d: "Oct 17", a: "UK",   h: "OU",   fa: 21, fh: 13 },
+  // Week 8
+  { id: 34, wk: 8,  d: "Oct 24", a: "LSU",  h: "AUB",  fa: 38, fh: 17 },
+  { id: 35, wk: 8,  d: "Oct 24", a: "TAMU", h: "ALA",  fa: 20, fh: 31 },
+  { id: 36, wk: 8,  d: "Oct 24", a: "TENN", h: "SC",   fa: 24, fh: 27 },
+  { id: 37, wk: 8,  d: "Oct 24", a: "OU",   h: "MSST", fa: 23, fh: 15 },
+  { id: 38, wk: 8,  d: "Oct 24", a: "MISS", h: "TEX",  fa: 27, fh: 34 },
+  { id: 39, wk: 8,  d: "Oct 24", a: "VAN",  h: "UK",   fa: 17, fh: 34 },
+  // Week 9
+  { id: 40, wk: 9,  d: "Oct 31", a: "AUB",  h: "MISS", fa: 15, fh: 45 },
+  { id: 41, wk: 9,  d: "Oct 31", a: "FLA",  h: "UGA",  fa: 8,  fh: 27, site: "Atlanta" },
+  { id: 42, wk: 9,  d: "Oct 31", a: "SC",   h: "OU",   fa: 42, fh: 25 },
+  { id: 43, wk: 9,  d: "Oct 31", a: "MSST", h: "TEX",  fa: 3,  fh: 31 },
+  { id: 44, wk: 9,  d: "Oct 31", a: "MIZ",  h: "ARK",  fa: 34, fh: 10 },
+  // Week 10
+  { id: 45, wk: 10, d: "Nov 7",  a: "TEX",  h: "MIZ" },
+  { id: 46, wk: 10, d: "Nov 7",  a: "ARK",  h: "AUB" },
+  { id: 47, wk: 10, d: "Nov 7",  a: "TAMU", h: "SC" },
+  { id: 48, wk: 10, d: "Nov 7",  a: "ALA",  h: "LSU" },
+  { id: 49, wk: 10, d: "Nov 7",  a: "VAN",  h: "MSST" },
+  { id: 50, wk: 10, d: "Nov 7",  a: "UK",   h: "TENN" },
+  { id: 51, wk: 10, d: "Nov 7",  a: "UGA",  h: "MISS" },
+  { id: 52, wk: 10, d: "Nov 7",  a: "OU",   h: "FLA" },
+  // Week 11
+  { id: 53, wk: 11, d: "Nov 14", a: "SC",   h: "ARK" },
+  { id: 54, wk: 11, d: "Nov 14", a: "MIZ",  h: "UGA" },
+  { id: 55, wk: 11, d: "Nov 14", a: "FLA",  h: "UK" },
+  { id: 56, wk: 11, d: "Nov 14", a: "TEX",  h: "LSU" },
+  { id: 57, wk: 11, d: "Nov 14", a: "AUB",  h: "MSST" },
+  { id: 58, wk: 11, d: "Nov 14", a: "MISS", h: "OU" },
+  { id: 59, wk: 11, d: "Nov 14", a: "TENN", h: "TAMU" },
+  { id: 60, wk: 11, d: "Nov 14", a: "ALA",  h: "VAN" },
+  // Week 12
+  { id: 61, wk: 12, d: "Nov 21", a: "VAN",  h: "FLA" },
+  { id: 62, wk: 12, d: "Nov 21", a: "UK",   h: "MIZ" },
+  { id: 63, wk: 12, d: "Nov 21", a: "TAMU", h: "OU" },
+  { id: 64, wk: 12, d: "Nov 21", a: "UGA",  h: "SC" },
+  { id: 65, wk: 12, d: "Nov 21", a: "LSU",  h: "TENN" },
+  { id: 66, wk: 12, d: "Nov 21", a: "ARK",  h: "TEX" },
+  // Week 13
+  { id: 67, wk: 13, d: "Nov 27", a: "MSST", h: "MISS" },
+  { id: 68, wk: 13, d: "Nov 27", a: "TEX",  h: "TAMU" },
+  { id: 69, wk: 13, d: "Nov 28", a: "AUB",  h: "ALA" },
+  { id: 70, wk: 13, d: "Nov 28", a: "LSU",  h: "ARK" },
+  { id: 71, wk: 13, d: "Nov 28", a: "OU",   h: "MIZ" },
+  { id: 72, wk: 13, d: "Nov 28", a: "TENN", h: "VAN" }
+];
+
+
+// ===== SEC TIEBREAKER ENGINE =====
+// Implements the uploaded "Southeastern Conference Official Football Tiebreakers" document.
+// picks[id]  = "A" | "H" | null    (winner of each conference game)
+// scores[id] = { a, h } | null     (only present when consistent with the pick)
+function createEngine(cfg) {
+  const { teams, teamIds, games, noncon } = cfg;
+  const nm = t => teams[t].name;
+  const fmtList = arr => {
+    const n = arr.map(nm);
+    if (n.length <= 1) return n.join("");
+    if (n.length === 2) return n[0] + " and " + n[1];
+    return n.slice(0, -1).join(", ") + " and " + n[n.length - 1];
+  };
+  const RK = x => (Math.round(x * 1e7) / 1e7).toFixed(7);
+
+  return function compute(picks, scores, drawSeed, opts) {
+    const lite = !!(opts && opts.lite);
+    const efSel = new Set(), efSeed = new Set();
+    // ---------- base tables ----------
+    const W = {}, L = {}, opps = {}, res = new Map(), schedPair = new Set();
+    teamIds.forEach(t => { W[t] = 0; L[t] = 0; opps[t] = []; });
+    let decided = 0;
+    for (const g of games) {
+      opps[g.a].push(g.h); opps[g.h].push(g.a);
+      schedPair.add(g.a + "|" + g.h); schedPair.add(g.h + "|" + g.a);
+      const p = picks[g.id];
+      if (p === "A" || p === "H") {
+        decided++;
+        const w = p === "H" ? g.h : g.a, l = p === "H" ? g.a : g.h;
+        W[w]++; L[l]++;
+        res.set(w + "|" + l, 1); res.set(l + "|" + w, -1);
+      }
+    }
+    const R = (a, b) => res.get(a + "|" + b) || 0;            // 1 a beat b, -1 lost, 0 n/a
+    const sched = (a, b) => schedPair.has(a + "|" + b);
+    const pct = t => (W[t] + L[t]) ? W[t] / (W[t] + L[t]) : 0;
+    const rec = t => W[t] + "\u2013" + L[t];
+
+    // Group teams by value (higher first). vals: {team: number|null}
+    function rankGroups(S, valFn, asc) {
+      const m = new Map();
+      for (const t of S) {
+        const v = valFn(t); const k = RK(v);
+        if (!m.has(k)) m.set(k, { v, teams: [] });
+        m.get(k).teams.push(t);
+      }
+      const arr = [...m.values()].sort((x, y) => asc ? x.v - y.v : y.v - x.v);
+      return arr.map(x => x.teams.sort());
+    }
+    const tiers = rankGroups(teamIds, pct);
+
+    // Record of t vs a set of opponents (decided games only)
+    function recVs(t, oppSet) {
+      let w = 0, l = 0;
+      for (const o of oppSet) { const r = R(t, o); if (r === 1) w++; else if (r === -1) l++; }
+      return { w, l };
+    }
+
+    // Head-to-head-only ordering (used to order lower ties, per Step C.1.a)
+    function h2hOrder(G) {
+      G = [...G].sort();
+      if (G.length <= 1) return [G];
+      if (G.length === 2) {
+        const r = R(G[0], G[1]);
+        if (r === 1) return [[G[0]], [G[1]]];
+        if (r === -1) return [[G[1]], [G[0]]];
+        return [G];
+      }
+      const an = h2hAnalysis(G);
+      if (an.complete) {
+        const gr = rankGroups(G, t => an.rec[t].w / (G.length - 1));
+        if (gr.length === 1) return [G];
+        return gr.flatMap(sub => sub.length < G.length ? h2hOrder(sub) : [sub]);
+      }
+      if (an.beatAll) return [[an.beatAll], ...h2hOrder(G.filter(x => x !== an.beatAll))];
+      if (an.lostAll) return [...h2hOrder(G.filter(x => x !== an.lostAll)), [an.lostAll]];
+      return [G];
+    }
+    function h2hAnalysis(S) {
+      const r = {}; S.forEach(t => r[t] = { w: 0, l: 0 });
+      let complete = true;
+      for (let i = 0; i < S.length; i++) for (let j = i + 1; j < S.length; j++) {
+        const x = R(S[i], S[j]);
+        if (x === 1) { r[S[i]].w++; r[S[j]].l++; }
+        else if (x === -1) { r[S[j]].w++; r[S[i]].l++; }
+        else complete = false;
+      }
+      const beatAll = S.find(t => S.every(o => o === t || R(t, o) === 1)) || null;
+      const lostAll = S.find(t => S.every(o => o === t || R(t, o) === -1)) || null;
+      return { complete, rec: r, beatAll, lostAll };
+    }
+
+    // ---------- Step E support: capped relative scoring margin ----------
+    const seas = {};
+    teamIds.forEach(t => {
+      seas[t] = { pf: 0, pa: 0, n: 0 };
+      (noncon[t] || []).forEach(([f, a]) => { seas[t].pf += f; seas[t].pa += a; seas[t].n++; });
+    });
+    for (const g of games) {
+      const s = scores[g.id]; if (!s || !picks[g.id]) continue;
+      seas[g.a].pf += s.a; seas[g.a].pa += s.h; seas[g.a].n++;
+      seas[g.h].pf += s.h; seas[g.h].pa += s.a; seas[g.h].n++;
+    }
+    const avgFor = t => seas[t].n ? seas[t].pf / seas[t].n : 0;
+    const avgAg = t => seas[t].n ? seas[t].pa / seas[t].n : 0;
+    const marginCache = {};
+    function margin(t) {
+      if (marginCache[t]) return marginCache[t];
+      let sum = 0, n = 0, dec = 0;
+      for (const g of games) {
+        if (g.a !== t && g.h !== t) continue;
+        if (!picks[g.id]) continue;
+        dec++;
+        const s = scores[g.id]; if (!s) continue;
+        const isA = g.a === t, o = isA ? g.h : g.a;
+        const pf = isA ? s.a : s.h, pa = isA ? s.h : s.a;
+        const oa = avgAg(o), of = avgFor(o);
+        // Components rounded to 0.1 pt, matching the Appendix A worked example (147.6 - 116.7 = +30.9)
+        const r1 = x => Math.round(x * 10) / 10;
+        const off = r1(oa > 0 ? Math.min(200, pf / oa * 100) : (pf > 0 ? 200 : 100));
+        const def = r1(of > 0 ? pa / of * 100 : (pa > 0 ? 200 : 100));
+        sum += off - def; n++;
+      }
+      return (marginCache[t] = { v: n ? sum / n : 0, n, dec });
+    }
+
+    // ---------- logging ----------
+    const log = [];
+    const L_ = lite ? () => {} : (depth, kind, text, step) => log.push({ depth, kind, text, step: step || null });
+    let provisionalE = false, usedDraw = false;
+
+    // ---------- step evaluators ----------
+    // Each returns { groups } (ordered best→worst) or { na:true } (not applicable / cannot separate)
+    function commonOpps(S) {
+      return teamIds.filter(o => !S.includes(o) && S.every(t => sched(t, o)));
+    }
+    function stepB(S, depth) {
+      const co = commonOpps(S);
+      if (!co.length) { L_(depth, "step", "No common conference opponents.", "B"); return { na: true }; }
+      const rv = {}; S.forEach(t => rv[t] = recVs(t, co));
+      if (S.some(t => rv[t].w + rv[t].l === 0)) {
+        L_(depth, "step", "Common opponents: " + fmtList(co) + ". Games still unpicked, so this step can’t separate yet.", "B");
+        return { na: true };
+      }
+      const groups = rankGroups(S, t => rv[t].w / (rv[t].w + rv[t].l));
+      if (!lite) L_(depth, "step", "Record vs. common opponents (" + co.map(o => teams[o].abbr).join(", ") + "): " +
+        S.map(t => teams[t].abbr + " " + rv[t].w + "\u2013" + rv[t].l).join(", ") + ".", "B");
+      return { groups };
+    }
+    // Step C: walk the standings from the top among non-tied teams
+    function stepC(S, depth) {
+      const others = tiers.map(tr => tr.filter(t => !S.includes(t))).filter(tr => tr.length);
+      for (const tier of others) {
+        const subs = h2hOrder(tier);
+        for (const sub of subs) {
+          const common = sub.filter(o => S.every(t => sched(t, o)));
+          if (!common.length) continue;
+          const rv = {}; S.forEach(t => rv[t] = recVs(t, common));
+          if (S.some(t => rv[t].w + rv[t].l === 0)) continue;     // still unpicked
+          const groups = rankGroups(S, t => rv[t].w / (rv[t].w + rv[t].l));
+          const label = common.map(o => teams[o].abbr).join(" + ") + " (" + rec(common[0]) + ")";
+          if (groups.length > 1) {
+            if (!lite) L_(depth, "step", "Vs. highest-placed common opponent " + label + ": " +
+              S.map(t => teams[t].abbr + " " + rv[t].w + "\u2013" + rv[t].l).join(", ") + ".", "C");
+            return { groups };
+          }
+        }
+      }
+      L_(depth, "step", "Common opponents exhausted with identical records.", "C");
+      return { na: true };
+    }
+    function stepD(S, depth) {
+      const v = {};
+      S.forEach(t => { const os = opps[t]; v[t] = os.reduce((s, o) => s + pct(o), 0) / os.length; });
+      const groups = rankGroups(S, t => v[t]);
+      if (!lite) L_(depth, "step", "Opponents’ cumulative conference win %: " +
+        S.map(t => teams[t].abbr + " " + (v[t] * 100).toFixed(1) + "%").join(", ") + ".", "D");
+      return { groups };
+    }
+    function stepE(S, depth) {
+      const m = {}; let partial = false;
+      S.forEach(t => { m[t] = margin(t); if (m[t].n < m[t].dec) partial = true; });
+      if (partial) provisionalE = true;
+      const groups = rankGroups(S, t => Math.round(m[t].v * 10) / 10);
+      if (!lite) L_(depth, "step", "Capped relative scoring margin: " +
+        S.map(t => teams[t].abbr + " " + (m[t].v >= 0 ? "+" : "") + m[t].v.toFixed(1) + "%" +
+          (m[t].n < m[t].dec ? " (" + m[t].n + "/" + m[t].dec + " games scored)" : "")).join(", ") +
+        (partial ? ". Provisional: some picked games have no score entered." : "."), "E");
+      return { groups };
+    }
+    function drawOrder(S) {
+      const h = s => { let x = 2166136261 ^ drawSeed; for (const ch of s) { x ^= ch.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; };
+      return [...S].sort((a, b) => h(a) - h(b));
+    }
+
+    // ---------- two-team procedure ----------
+    function resolveTwo(a, b, depth, purpose) {
+      L_(depth, "head", (purpose === "seed" ? "Seeding " : "Two-team tie: ") + nm(a) + " vs. " + nm(b));
+      const d = depth + 1;
+      const r = R(a, b);
+      if (r !== 0) {
+        const w = r === 1 ? a : b;
+        L_(d, "step", nm(w) + " won the head-to-head game.", "A");
+        return verdict2(w, w === a ? b : a, d, "A");
+      }
+      L_(d, "step", sched(a, b) ? "Head-to-head game not yet picked." : "Did not play each other.", "A");
+      for (const [st, fn] of [["B", stepB], ["C", stepC], ["D", stepD], ["E", stepE]]) {
+        const out = fn([a, b].sort(), d);
+        if (out.na || out.groups.length === 1) { if (!out.na) L_(d, "note", "Still tied."); continue; }
+        const w = out.groups[0][0];
+        if (st === "E") (purpose === "seed" ? efSeed : efSel).add(a).add(b);
+        return verdict2(w, w === a ? b : a, d, st);
+      }
+      usedDraw = true;
+      (purpose === "seed" ? efSeed : efSel).add(a).add(b);
+      const ord = drawOrder([a, b]);
+      L_(d, "step", "Random draw (simulated): " + nm(ord[0]) + " drawn first.", "F");
+      return verdict2(ord[0], ord[1], d, "F");
+    }
+    function verdict2(w, l, d, st) {
+      L_(d, "win", nm(w) + " wins the tiebreaker.", st);
+      return { w, l, step: st };
+    }
+
+    // ---------- 3+ team procedures ----------
+    function interpret(groups, S, mode) {
+      if (groups.length === 1) return { type: "next" };
+      const top = groups[0];
+      if (top.length === 1) return { type: "one", team: top[0], rest: S.filter(t => t !== top[0]) };
+      if (mode === "first" && top.length === 2) return { type: "two", teams: top };
+      return { type: "revert", teams: top };
+    }
+    function runStep(st, S, mode, d) {
+      if (st === "A") {
+        const an = h2hAnalysis(S);
+        if (an.complete) {
+          const groups = rankGroups(S, t => an.rec[t].w);
+          if (!lite) L_(d, "step", "Round robin: " + S.map(t => teams[t].abbr + " " + an.rec[t].w + "\u2013" + an.rec[t].l).join(", ") + ".", "A");
+          return interpret(groups, S, mode);
+        }
+        if (an.beatAll) {
+          L_(d, "step", nm(an.beatAll) + " beat every other tied team.", "A");
+          return { type: "one", team: an.beatAll, rest: S.filter(t => t !== an.beatAll) };
+        }
+        if (an.lostAll) {
+          L_(d, "step", nm(an.lostAll) + " lost to every other tied team and is eliminated.", "A");
+          return { type: "drop", team: an.lostAll, rest: S.filter(t => t !== an.lostAll) };
+        }
+        L_(d, "step", "No round robin, and no team beat (or lost to) all the others.", "A");
+        return { type: "next" };
+      }
+      const fn = { B: stepB, C: stepC, D: stepD, E: stepE }[st];
+      const out = fn(S, d);
+      if (out.na) return { type: "next" };
+      const it = interpret(out.groups, S, mode);
+      if (st === "E" && it.type !== "next") S.forEach(t => efSel.add(t));
+      if (it.type === "next") L_(d, "note", "Still tied.");
+      return it;
+    }
+    const STEPS = ["A", "B", "C", "D", "E"];
+
+    function resolveFirst(S, depth) {
+      S = [...S].sort();
+      if (S.length === 2) {
+        L_(depth, "note", fmtList(S) + " are tied for first; both qualify.");
+        const r = resolveTwo(S[0], S[1], depth, "seed");
+        return { seeds: [r.w, r.l], how: { [S[0]]: "tie1", [S[1]]: "tie1" }, step: r.step };
+      }
+      L_(depth, "head", S.length + "-way tie for first: " + fmtList(S));
+      const d = depth + 1;
+      for (const st of STEPS) {
+        const out = runStep(st, S, "first", d);
+        if (out.type === "next") continue;
+        if (out.type === "one") {
+          L_(d, "win", nm(out.team) + " takes the No. 1 seed.", st);
+          const second = oneSpot(out.rest, d);
+          return { seeds: [out.team, second.team], step: st, step2: second.step };
+        }
+        if (out.type === "two") {
+          L_(d, "win", fmtList(out.teams) + " both qualify.", st);
+          const r = resolveTwo(out.teams[0], out.teams[1], d, "seed");
+          return { seeds: [r.w, r.l], step: st, step2: st };
+        }
+        if (out.type === "revert") {
+          L_(d, "note", fmtList(out.teams) + " remain; the rest are eliminated. Restart at Step A.", st);
+          return resolveFirst(out.teams, d);
+        }
+        if (out.type === "drop") {
+          if (out.rest.length === 2) {
+            L_(d, "win", fmtList(out.rest) + " both qualify.", st);
+            const r = resolveTwo(out.rest[0], out.rest[1], d, "seed");
+            return { seeds: [r.w, r.l], step: st, step2: st };
+          }
+          return resolveFirst(out.rest, d);
+        }
+      }
+      usedDraw = true; S.forEach(t => efSel.add(t));
+      const ord = drawOrder(S);
+      L_(d, "step", "Random draw (simulated): " + nm(ord[0]) + " (home), then " + nm(ord[1]) + " (away).", "F");
+      return { seeds: [ord[0], ord[1]], step: "F", step2: "F" };
+    }
+    function oneSpot(R_, depth) {
+      if (R_.length === 1) return { team: R_[0], step: null };
+      if (R_.length === 2) { const r = resolveTwo(R_[0], R_[1], depth, "second"); return { team: r.w, step: r.step }; }
+      return resolveSecond(R_, depth);
+    }
+    function resolveSecond(S, depth) {
+      S = [...S].sort();
+      L_(depth, "head", S.length + "-way tie for second: " + fmtList(S));
+      const d = depth + 1;
+      for (const st of STEPS) {
+        const out = runStep(st, S, "second", d);
+        if (out.type === "next") continue;
+        if (out.type === "one") { L_(d, "win", nm(out.team) + " earns the No. 2 seed.", st); return { team: out.team, step: st }; }
+        if (out.type === "revert") {
+          L_(d, "note", fmtList(out.teams) + " remain; the rest are eliminated. Restart at Step A.", st);
+          return oneSpot(out.teams, d);
+        }
+        if (out.type === "drop") return oneSpot(out.rest, d);
+      }
+      usedDraw = true; S.forEach(t => efSel.add(t));
+      const ord = drawOrder(S);
+      L_(d, "step", "Random draw (simulated): " + nm(ord[0]) + " drawn first.", "F");
+      return { team: ord[0], step: "F" };
+    }
+
+    // ---------- top level ----------
+    let seed1, seed2, how1 = "outright", how2 = "outright", step1 = null, step2 = null;
+    const g0 = tiers[0];
+    if (g0.length === 1) {
+      seed1 = g0[0];
+      const g1 = tiers[1] || [];
+      if (g1.length === 1) seed2 = g1[0];
+      else if (g1.length >= 2) {
+        const o = oneSpot(g1, 0); seed2 = o.team; how2 = "tie2"; step2 = o.step;
+      }
+    } else if (g0.length === 2) {
+      const r = resolveTwo(g0[0], g0[1], 0, "seed");
+      seed1 = r.w; seed2 = r.l; how1 = how2 = "cotie"; step1 = r.step; step2 = null;
+    } else {
+      const r = resolveFirst(g0, 0);
+      seed1 = r.seeds[0]; seed2 = r.seeds[1]; how1 = how2 = "tie1"; step1 = r.step; step2 = r.step2;
+    }
+
+    if (lite) return { W, L, title: { home: seed1, away: seed2 }, efSel, efSeed };
+
+    // ---------- full standings order ----------
+    const order = [];
+    const placed = new Set([seed1, seed2]);
+    order.push({ t: seed1, tied: false }, { t: seed2, tied: false });
+    for (const tier of tiers) {
+      const rest = tier.filter(t => !placed.has(t));
+      for (const sub of h2hOrder(rest)) {
+        sub.sort((a, b) => nm(a).localeCompare(nm(b)));
+        sub.forEach(t => { order.push({ t, tied: sub.length > 1, group: sub }); placed.add(t); });
+      }
+    }
+    // rank labels
+    let pos = 0;
+    for (let i = 0; i < order.length; i++) {
+      const o = order[i];
+      if (i < 2) { o.rank = String(i + 1); continue; }
+      if (o.tied) {
+        const first = order.findIndex(x => x.group === o.group);
+        o.rank = "T-" + (first + 1);
+      } else o.rank = String(i + 1);
+    }
+
+    return {
+      W, L, pct, rec, tiers, order, decided, total: games.length,
+      title: { home: seed1, away: seed2, how1, how2, step1, step2 },
+      log, provisionalE, usedDraw, efSel, efSeed,
+      _internals: { resolveTwo, resolveFirst, resolveSecond, h2hOrder, margin, avgFor, avgAg }
+    };
+  };
+}
+
+// ===== ESPN FPI PROJECTIONS FOR REMAINING GAMES (collected Nov 5, 2026) =====
+// pH = probability the HOME team wins. kind: "pub" = published ESPN Analytics matchup predictor figure
+// (as reported by the cited outlet on that date); "est" = estimated from ESPN FPI team ratings (see FPI_MODEL).
+const FPI = {
+  45: { pH: 0.287, kind: "pub", d: "Nov. 4",  src: "247Sports (Mizzou) citing ESPN FPI; ESPN lists 71%" },
+  46: { pH: 0.804, kind: "pub", d: "Nov. 2",  src: "Auburn Wire citing ESPN FPI" },
+  47: { pH: 0.541, kind: "pub", d: "Nov. 2",  src: "Aggies Wire citing ESPN FPI; ESPN lists 54%" },
+  48: { pH: 0.570, kind: "pub", d: "Nov. 5",  src: "ESPN Week 10 lines, FPI projection" },
+  49: { pH: 0.737, kind: "pub", d: "Nov. 4",  src: "Vanderbilt Hustler citing ESPN" },
+  50: { pH: 0.670, kind: "pub", d: "Nov. 5",  src: "ESPN Week 10 lines, FPI projection" },
+  51: { pH: 0.445, kind: "pub", d: "Nov. 5",  src: "UGA Wire citing ESPN matchup predictor" },
+  52: { pH: 0.640, kind: "pub", d: "Nov. 5",  src: "ESPN Week 10 lines, FPI projection" },
+  53: { pH: 0.277, kind: "pub", d: "Oct. 27", src: "Gamecock247 citing ESPN matchup predictor" },
+  54: { pH: 0.846, kind: "pub", d: "Nov. 1+", src: "ESPN game page matchup predictor" },
+  55: { pH: null,  kind: "est" },
+  56: { pH: 0.571, kind: "pub", d: "Oct. 29", src: "247Sports (LSU) citing ESPN FPI" },
+  57: { pH: 0.506, kind: "pub", d: "Nov. 2",  src: "Auburn Wire citing ESPN FPI" },
+  58: { pH: 0.294, kind: "pub", d: "Nov. 5",  src: "SI (Oklahoma) citing ESPN Analytics" },
+  59: { pH: 0.495, kind: "pub", d: "Nov. 2",  src: "Yahoo/Tennessee citing ESPN matchup predictor" },
+  60: { pH: 0.060, kind: "pub", d: "Oct. 29", src: "Roll Tide Wire citing ESPN (via secondary aggregator)", weak: true },
+  61: { pH: null,  kind: "est" },
+  62: { pH: 0.562, kind: "pub", d: "Oct. 21", src: "SI (Missouri) citing ESPN Analytics" },
+  63: { pH: 0.513, kind: "pub", d: "Nov. 5",  src: "SI (Oklahoma) citing ESPN Analytics" },
+  64: { pH: 0.181, kind: "pub", d: "Oct. 27", src: "Gamecock247 citing ESPN matchup predictor" },
+  65: { pH: 0.334, kind: "pub", d: "Nov. 2",  src: "Yahoo/Tennessee citing ESPN matchup predictor" },
+  66: { pH: null,  kind: "est" },
+  67: { pH: null,  kind: "est" },
+  68: { pH: 0.258, kind: "pub", d: "Oct. 30", src: "Aggies Wire citing ESPN FPI" },
+  69: { pH: 0.890, kind: "pub", d: "Nov. 2",  src: "Auburn Wire citing ESPN FPI" },
+  70: { pH: 0.080, kind: "pub", d: "Oct. 29", src: "247Sports (LSU) citing ESPN FPI" },
+  71: { pH: 0.628, kind: "pub", d: "Nov. 5",  src: "SI (Oklahoma) citing ESPN Analytics" },
+  72: { pH: 0.144, kind: "pub", d: "Nov. 2",  src: "Yahoo/Tennessee citing ESPN matchup predictor" }
+};
+// ESPN FPI team ratings after Week 9 (points vs. average team), from On3/Saturday Down South.
+// Florida's exact rating was not found; it ranks No. 22, between Missouri (No. 19, 14.1) and Texas A&M (No. 23, 13.8).
+const FPI_RATING = { UGA: 25.4, LSU: 24.7, ALA: 24.5, TEX: 24.0, MISS: 21.5, TENN: 16.7, MIZ: 14.1, FLA: 13.95,
+  TAMU: 13.8, SC: 13.5, UK: 13.0, AUB: 9.6, MSST: 7.8, ARK: 0.6, VAN: 0.3 };
+const FPI_MODEL = { hfa: 2.2, sigma: 14 };
+function normCdf(z) { // Abramowitz-Stegun 26.2.17
+  const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+function fpiEstimate(home, away) {
+  const m = FPI_RATING[home] - FPI_RATING[away] + FPI_MODEL.hfa;
+  return { pH: normCdf(m / FPI_MODEL.sigma), margin: m };
+}
+
+// ===== RACE ANALYSIS: simulated odds + exact clinch/elimination =====
+// Runs as a generator so the browser can time-slice it (yield = "pause here if out of time").
+function createAnalyzer(cfg, compute) {
+  const { teamIds, games, probHome } = cfg;
+  const idx = {}; teamIds.forEach((t, i) => idx[t] = i);
+  const N = teamIds.length;
+
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  return function* analyze(picks, scores, opts) {
+    const SIMS = (opts && opts.sims) || 10000;
+    const LEAF_BUDGET = (opts && opts.leafBudget) || 4000;
+    const NODE_BUDGET = (opts && opts.nodeBudget) || 250000;
+    const open = games.filter(g => !picks[g.id]);
+
+    // ---------- 1. Monte Carlo ----------
+    const berth = {}, no1 = {}; teamIds.forEach(t => { berth[t] = 0; no1[t] = 0; });
+    const wReach = new Set(), wMiss = new Set(), wNotNo1 = new Set(), wDestinyMiss = new Set();
+    const rng = mulberry32(20261205);
+    const p = Object.assign({}, picks);
+    const openBy = {}; teamIds.forEach(t => openBy[t] = []);
+    open.forEach(g => { openBy[g.a].push(g); openBy[g.h].push(g); });
+    const sims = open.length ? SIMS : 1;
+    for (let i = 0; i < sims; i++) {
+      for (const g of open) p[g.id] = rng() < probHome(g) ? "H" : "A";
+      const r = compute(p, scores, i + 1, { lite: true });
+      const { home, away } = r.title;
+      berth[home]++; berth[away]++; no1[home]++;
+      for (const t of teamIds) {
+        const inTop = t === home || t === away, unc = r.efSel.has(t);
+        if (inTop || unc) wReach.add(t);
+        if (!inTop || unc) {
+          wMiss.add(t);
+          if (openBy[t].every(g => (p[g.id] === "H" ? g.h : g.a) === t)) wDestinyMiss.add(t);
+        }
+        if (t !== home || unc || r.efSeed.has(t)) wNotNo1.add(t);
+      }
+      if (i % 250 === 249) yield { phase: "sim", done: i + 1, total: sims };
+    }
+
+    // ---------- 2. Exact searches (only where simulation found no example) ----------
+    const baseW = new Array(N).fill(0);
+    games.forEach(g => { const pk = picks[g.id]; if (pk) baseW[idx[pk === "H" ? g.h : g.a]]++; });
+
+    const witness = {};
+    function* search(T, kind) {
+      const ti = idx[T];
+      const q = Object.assign({}, picks);
+      const W = baseW.slice(), rem = new Array(N).fill(0);
+      open.forEach(g => { rem[idx[g.a]]++; rem[idx[g.h]]++; });
+      // T's games first, then games between currently stronger teams
+      const order = open.slice().sort((x, y) => {
+        const xt = (x.a === T || x.h === T) ? 1 : 0, yt = (y.a === T || y.h === T) ? 1 : 0;
+        if (xt !== yt) return yt - xt;
+        return (W[idx[y.a]] + W[idx[y.h]]) - (W[idx[x.a]] + W[idx[x.h]]);
+      });
+      const wantIn = kind === "reach";
+      let leaves = 0, nodes = 0;
+      // bound test: 1 = witness guaranteed in subtree, -1 = impossible in subtree, 0 = unknown
+      function bound() {
+        const minT = W[ti], maxT = W[ti] + rem[ti];
+        let above = 0, canTie = 0, anyAbove = false, allBelow = true;
+        for (let i = 0; i < N; i++) {
+          if (i === ti) continue;
+          if (W[i] > maxT) { above++; anyAbove = true; }
+          if (W[i] + rem[i] >= minT) { canTie++; allBelow = false; }
+        }
+        const surelyOut = above >= 2, surelyIn = canTie <= 1;
+        if (kind === "reach") return surelyIn ? 1 : surelyOut ? -1 : 0;
+        if (kind === "notNo1") return anyAbove ? 1 : allBelow ? -1 : 0;
+        return surelyOut ? 1 : surelyIn ? -1 : 0;            // miss, destinyMiss
+      }
+      function* dfs(k) {
+        if (++nodes > NODE_BUDGET) return null;
+        if (nodes % 400 === 0) yield { phase: "exact" };
+        const b = bound();
+        if (b === 1) { const w = Object.assign({}, q); open.forEach(g => { if (!w[g.id]) w[g.id] = "H"; }); witness[T + ":" + kind] = w; return true; }
+        if (b === -1) return false;
+        if (k === order.length) {
+          if (++leaves > LEAF_BUDGET) return null;
+          const r = compute(q, scores, 1, { lite: true });
+          const inTop = r.title.home === T || r.title.away === T, unc = r.efSel.has(T);
+          let ok;
+          if (kind === "reach") ok = inTop || unc;
+          else if (kind === "notNo1") ok = r.title.home !== T || unc || r.efSeed.has(T);
+          else ok = !inTop || unc;
+          if (ok) witness[T + ":" + kind] = Object.assign({}, q);
+          return ok;
+        }
+        const g = order[k], ai = idx[g.a], hi = idx[g.h];
+        let sides;
+        if (g.a === T || g.h === T) {
+          const tSide = g.a === T ? "A" : "H", oSide = tSide === "A" ? "H" : "A";
+          // destinyMiss: T must win out. reach: try T winning first. miss/notNo1: try T losing first.
+          sides = kind === "destinyMiss" ? [tSide] : wantIn ? [tSide, oSide] : [oSide, tSide];
+        } else {
+          const strongerHome = W[hi] >= W[ai];
+          // to keep T in: let weaker teams win; to push T out: let stronger teams win
+          sides = wantIn ? (strongerHome ? ["A", "H"] : ["H", "A"]) : (strongerHome ? ["H", "A"] : ["A", "H"]);
+        }
+        rem[ai]--; rem[hi]--;
+        let sawNull = false;
+        for (const s of sides) {
+          q[g.id] = s; const wi = s === "H" ? hi : ai; W[wi]++;
+          const r = yield* dfs(k + 1);
+          W[wi]--;
+          if (r === true) { q[g.id] = null; rem[ai]++; rem[hi]++; return true; }
+          if (r === null) sawNull = true;
+        }
+        q[g.id] = null; rem[ai]++; rem[hi]++;
+        return sawNull ? null : false;
+      }
+      return yield* dfs(0);
+    }
+
+    const status = {};
+    for (const T of teamIds) {
+      const s = { reach: null, miss: null, notNo1: null, destiny: null };
+      s.reach = wReach.has(T) ? true : yield* search(T, "reach");
+      s.miss = wMiss.has(T) ? true : yield* search(T, "miss");
+      s.notNo1 = wNotNo1.has(T) ? true : (s.reach === false ? true : yield* search(T, "notNo1"));
+      if (s.reach !== false && s.miss !== false) {
+        // controls own destiny = no completion where T wins out and still misses
+        const dm = wDestinyMiss.has(T) ? true : yield* search(T, "destinyMiss");
+        s.destiny = dm === null ? null : !dm;
+      }
+      status[T] = s;
+    }
+    return { sims, open: open.length, berth, no1, status, witness };
+  };
+}
+
+(function () {
+  "use strict";
+  const compute = createEngine({ teams: TEAMS, teamIds: TEAM_IDS, games: GAMES, noncon: NONCON });
+  const GBY = {}; GAMES.forEach(g => GBY[g.id] = g);
+  const probHome = g => { const f = FPI[g.id]; return f && f.pH != null ? f.pH : fpiEstimate(g.h, g.a).pH; };
+  const projInfo = g => {
+    const f = FPI[g.id]; if (!f) return null;
+    const est = f.pH == null;
+    return { pH: probHome(g), est, d: est ? "Post-Week 9 ratings" : f.d, src: est ? "Estimated from ESPN FPI team ratings (post-Week 9)" : f.src, old: !est && /^Oct/.test(f.d), weak: !!f.weak };
+  };
+  const fmtP = x => { const v = Math.round(x * 1000) / 10; return (v >= 99.95 ? ">99.9" : String(v)) + "%"; };
+  const analyze = createAnalyzer({ teamIds: TEAM_IDS, games: GAMES, probHome }, compute);
+  const STEP = { A: "head-to-head", B: "record vs. common opponents", C: "record vs. the highest-placed common opponent", D: "opponents’ cumulative win %", E: "capped relative scoring margin", F: "a random draw" };
+  const STORE = "sec26-title-race";
+  const DATA_VERSION = "2026-11-05";
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const isFinal = g => g.fa != null;
+  const actual = g => isFinal(g) ? (g.fa > g.fh ? "A" : "H") : null;
+  const FINALS = GAMES.filter(isFinal).length;
+  const MON = { Sep: "Sept.", Oct: "Oct.", Nov: "Nov." };
+  const fd = d => d.replace(/^(\w+) /, (m, mo) => (MON[mo] || mo) + " ");
+
+  function defaults() {
+    const picks = {}, scores = {};
+    GAMES.forEach(g => { picks[g.id] = actual(g); scores[g.id] = isFinal(g) ? { a: g.fa, h: g.fh } : null; });
+    return { picks, scores, seed: 1 };
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE); if (!raw) return null;
+      const s = JSON.parse(raw); if (!s || s.v !== DATA_VERSION) return null;
+      const d = defaults();
+      GAMES.forEach(g => {
+        const p = s.picks && s.picks[g.id];
+        d.picks[g.id] = (p === "A" || p === "H") ? p : null;
+        const sc = s.scores && s.scores[g.id];
+        const ok = sc && Number.isInteger(sc.a) && Number.isInteger(sc.h) && sc.a >= 0 && sc.h >= 0 && sc.a !== sc.h && d.picks[g.id] && ((sc.a > sc.h) === (d.picks[g.id] === "A"));
+        d.scores[g.id] = ok ? { a: sc.a, h: sc.h } : null;
+      });
+      d.seed = Number.isInteger(s.seed) ? s.seed : 1;
+      return d;
+    } catch (e) { return null; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify({ v: DATA_VERSION, picks: state.picks, scores: state.scores, seed: state.seed })); } catch (e) { /* storage unavailable */ }
+  }
+
+  let state = load() || defaults();
+  const ui = { filter: "remaining", team: "ALL", tab: "games", open: new Set(), proj: true };
+  let R = null;
+  const changed = g => {
+    if (!isFinal(g)) return false;
+    const p = state.picks[g.id], s = state.scores[g.id];
+    return p !== actual(g) || !s || s.a !== g.fa || s.h !== g.fh;
+  };
+  const recOf = t => R ? R.rec(t) : "";
+
+  // ---------- Games ----------
+  const gamesEl = document.getElementById("games");
+  const rows = new Map();
+  const CHECK = '<svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function pickBtn(g, side) {
+    const t = side === "A" ? g.a : g.h, T = TEAMS[t];
+    return '<button class="pick ' + (side === "A" ? "away" : "home") + '" data-side="' + side + '" aria-pressed="false" style="--tc:' + T.c + ';--tt:' + T.t + '">' +
+      '<span class="chip">' + esc(T.abbr) + '</span><span class="pn"><span class="pname">' + esc(T.short) + '</span><span class="prec"></span></span>' + CHECK + '</button>';
+  }
+  function renderGames() {
+    rows.clear();
+    const show = GAMES.filter(g =>
+      (ui.team === "ALL" || g.a === ui.team || g.h === ui.team) &&
+      (ui.filter === "all" || (ui.filter === "remaining" && !isFinal(g)) || (ui.filter === "changed" && changed(g))));
+    if (!show.length) {
+      gamesEl.innerHTML = '<div class="empty">' + (ui.filter === "changed"
+        ? "No finals changed yet. Switch to All and tap the other team in any final to explore an alternate result."
+        : "No games match this view. Switch to All to see every game.") + "</div>";
+      return;
+    }
+    const byWk = new Map();
+    show.forEach(g => { if (!byWk.has(g.wk)) byWk.set(g.wk, []); byWk.get(g.wk).push(g); });
+    let html = "";
+    for (const [wk, gs] of byWk) {
+      const dates = [...new Set(gs.map(g => g.d))];
+      html += '<section class="week"><div class="week-h"><h3>Week ' + wk + '</h3><span>' + esc(dates.length > 1 ? fd(dates[0]) + "–" + dates[dates.length - 1].split(" ")[1] : fd(dates[0])) + '</span></div><ol class="glist">';
+      for (const g of gs) {
+        const A = TEAMS[g.a].name, H = TEAMS[g.h].name;
+        html += '<li class="game" data-id="' + g.id + '" aria-label="' + esc(A + (g.site ? " vs. " : " at ") + H + ", " + fd(g.d)) + '">' +
+          pickBtn(g, "A") +
+          '<div class="mid"><span class="at">' + (g.site ? "vs.<br>" + esc(g.site) : "at") + '</span><span class="sc"></span><button class="linkbtn" data-act="score"></button></div>' +
+          pickBtn(g, "H") + '<div class="foot"></div></li>';
+      }
+      html += "</ol></section>";
+    }
+    gamesEl.innerHTML = html;
+    gamesEl.querySelectorAll(".game").forEach(li => {
+      rows.set(+li.dataset.id, { li, a: li.querySelector('.pick[data-side="A"]'), h: li.querySelector('.pick[data-side="H"]'), sc: li.querySelector(".sc"), sb: li.querySelector('[data-act="score"]'), foot: li.querySelector(".foot") });
+    });
+    updateGames();
+  }
+  function updateGames() {
+    for (const [id, r] of rows) {
+      const g = GBY[id], p = state.picks[id], s = state.scores[id];
+      r.li.classList.toggle("final", isFinal(g) && !changed(g));
+      r.a.setAttribute("aria-pressed", p === "A"); r.h.setAttribute("aria-pressed", p === "H");
+      r.a.classList.toggle("lost", p === "H"); r.h.classList.toggle("lost", p === "A");
+      r.a.querySelector(".prec").textContent = recOf(g.a); r.h.querySelector(".prec").textContent = recOf(g.h);
+      r.sc.textContent = s ? s.a + "–" + s.h : "";
+      r.sc.hidden = !s;
+      const open = ui.open.has(id);
+      r.sb.textContent = open ? "Done" : (s ? "Edit" : "Score");
+      r.sb.setAttribute("aria-expanded", open);
+      r.sb.setAttribute("aria-label", (open ? "Close score entry for " : (s ? "Edit score for " : "Add a score for ")) + TEAMS[g.a].name + " vs. " + TEAMS[g.h].name);
+      // footer
+      let foot = "";
+      if (ui.proj && !isFinal(g)) {
+        const pi = projInfo(g);
+        if (pi) {
+          const fav = pi.pH >= 0.5 ? g.h : g.a, pf = Math.max(pi.pH, 1 - pi.pH);
+          const wA = (1 - pi.pH) * 100, wH = pi.pH * 100;
+          foot += '<div class="proj"><div class="ptxt"><span>' + (pi.est ? "Estimate: " : "FPI: ") + "<b>" + esc(TEAMS[fav].short) + " " + fmtP(pf) + "</b></span>" +
+            '<span class="src' + (pi.old ? " old" : "") + '" title="' + esc(pi.src) + '">' + esc(pi.d) + (pi.weak ? ", secondary source" : "") + "</span></div>" +
+            '<div class="pbar" role="img" aria-label="' + esc(TEAMS[g.a].name + " " + fmtP(1 - pi.pH) + ", " + TEAMS[g.h].name + " " + fmtP(pi.pH)) + '"><i style="width:' + wA.toFixed(1) + "%;background:" + TEAMS[g.a].c + '"></i><i style="width:' + wH.toFixed(1) + "%;background:" + TEAMS[g.h].c + '"></i></div></div>';
+        }
+      }
+      if (isFinal(g)) {
+        foot += changed(g)
+          ? '<span class="tag warn">Changed from final (' + g.fa + "–" + g.fh + (g.ot ? ", OT" : "") + ')</span><button class="linkbtn" data-act="restore">Restore final</button>'
+          : '<span class="tag">Final' + (g.ot ? ", OT" : "") + "</span>";
+      }
+      if (open) {
+        foot += '<div class="scoreed"><label>' + esc(TEAMS[g.a].abbr) + ' <input type="number" inputmode="numeric" min="0" max="199" data-in="a" aria-label="' + esc(TEAMS[g.a].name) + ' points"></label>' +
+          '<label>' + esc(TEAMS[g.h].abbr) + ' <input type="number" inputmode="numeric" min="0" max="199" data-in="h" aria-label="' + esc(TEAMS[g.h].name) + ' points"></label>' +
+          (s ? '<button class="linkbtn" data-act="clearscore">Remove score</button>' : "") + '<span class="err" data-err></span></div>';
+      }
+      if (r.foot.dataset.html !== foot) {
+        const focusIn = r.foot.contains(document.activeElement) ? document.activeElement.dataset.in : null;
+        const vals = {}; r.foot.querySelectorAll("input").forEach(i => vals[i.dataset.in] = i.value);
+        r.foot.innerHTML = foot; r.foot.dataset.html = foot;
+        r.foot.querySelectorAll("input").forEach(i => {
+          i.value = vals[i.dataset.in] != null && vals[i.dataset.in] !== "" ? vals[i.dataset.in] : (s ? s[i.dataset.in] : "");
+          if (focusIn === i.dataset.in) i.focus();
+        });
+      } else if (open) {
+        r.foot.querySelectorAll("input").forEach(i => { if (document.activeElement !== i && s) i.value = s[i.dataset.in]; });
+      }
+    }
+  }
+  gamesEl.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const li = b.closest("[data-id]"); if (!li) return;
+    const id = +li.dataset.id, g = GBY[id];
+    if (b.classList.contains("pick")) {
+      const side = b.dataset.side;
+      setPick(g, state.picks[id] === side ? null : side);
+    } else if (b.dataset.act === "score") {
+      if (ui.open.has(id)) ui.open.delete(id); else ui.open.add(id);
+      updateGames();
+      if (ui.open.has(id)) { const inp = rows.get(id).foot.querySelector("input"); if (inp) inp.focus(); }
+    } else if (b.dataset.act === "restore") {
+      state.picks[id] = actual(g); state.scores[id] = { a: g.fa, h: g.fh }; commit();
+    } else if (b.dataset.act === "clearscore") {
+      state.scores[id] = null; commit();
+    }
+  });
+  gamesEl.addEventListener("input", e => {
+    const inp = e.target.closest("input[data-in]"); if (!inp) return;
+    const li = inp.closest("[data-id]"), id = +li.dataset.id;
+    const box = li.querySelector(".scoreed"), err = box.querySelector("[data-err]");
+    const va = box.querySelector('[data-in="a"]').value, vh = box.querySelector('[data-in="h"]').value;
+    err.textContent = "";
+    if (va === "" || vh === "") return;
+    const a = Number(va), h = Number(vh);
+    if (!Number.isInteger(a) || !Number.isInteger(h) || a < 0 || h < 0 || a > 199 || h > 199) { err.textContent = "Use whole numbers from 0 to 199."; return; }
+    if (a === h) { err.textContent = "Scores can’t be tied; enter the final after overtime."; return; }
+    state.scores[id] = { a, h }; state.picks[id] = a > h ? "A" : "H"; commit();
+  });
+  function setPick(g, side) {
+    state.picks[g.id] = side;
+    const s = state.scores[g.id];
+    if (!side || (s && ((s.a > s.h) !== (side === "A")))) state.scores[g.id] = null;
+    commit();
+  }
+
+  // ---------- Standings ----------
+  const standEl = document.getElementById("stand");
+  const srows = new Map();
+  TEAM_IDS.forEach(t => {
+    const T = TEAMS[t], li = document.createElement("li");
+    li.className = "srow"; li.dataset.t = t; li.tabIndex = 0;
+    li.innerHTML = '<span class="rk"></span><span class="tm"><span class="chip" style="--tc:' + T.c + ";--tt:" + T.t + '">' + esc(T.abbr) + '</span><span class="tname">' + esc(T.short) + '</span><span class="mk" hidden></span></span><span class="wl"></span><span class="pc"></span><span class="lf"></span>';
+    srows.set(t, li); standEl.appendChild(li);
+  });
+  const prevRec = {};
+  function fmtPct(t) { const w = R.W[t], l = R.L[t]; if (!(w + l)) return "–"; const p = w / (w + l); return p === 1 ? "1.000" : "." + p.toFixed(3).slice(2); }
+  function updateStandings() {
+    const first = new Map(); srows.forEach((el, t) => first.set(t, el.getBoundingClientRect().top));
+    const left = {}; TEAM_IDS.forEach(t => left[t] = 0);
+    GAMES.forEach(g => { if (!state.picks[g.id]) { left[g.a]++; left[g.h]++; } });
+    R.order.forEach((o, i) => {
+      const el = srows.get(o.t);
+      el.querySelector(".rk").textContent = o.rank;
+      const wl = el.querySelector(".wl"), rec = R.rec(o.t);
+      if (prevRec[o.t] && prevRec[o.t] !== rec && !reduce.matches) { wl.classList.remove("bump"); void wl.offsetWidth; wl.classList.add("bump"); }
+      prevRec[o.t] = rec; wl.textContent = rec;
+      el.querySelector(".pc").textContent = fmtPct(o.t);
+      el.querySelector(".lf").textContent = left[o.t];
+      el.classList.toggle("seed", i < 2); el.classList.toggle("cut", i === 1);
+      el.setAttribute("aria-label", o.rank + ", " + TEAMS[o.t].name + ", " + rec + (i === 0 ? ", No. 1 seed" : i === 1 ? ", No. 2 seed" : ""));
+      standEl.appendChild(el);
+    });
+    if (reduce.matches) return;
+    srows.forEach((el, t) => {
+      const dy = first.get(t) - el.getBoundingClientRect().top;
+      if (!dy) return;
+      el.style.transition = "none"; el.style.transform = "translateY(" + dy + "px)";
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transition = "transform 460ms cubic-bezier(.2,.8,.2,1)"; el.style.transform = ""; }));
+    });
+  }
+  function filterTeam(t) {
+    ui.team = t; teamSel.value = t;
+    if (ui.filter === "changed") setFilter("all", false);
+    renderGames(); setTab("games");
+    document.getElementById("p-games").scrollIntoView({ behavior: reduce.matches ? "auto" : "smooth", block: "start" });
+  }
+  standEl.addEventListener("click", e => { const li = e.target.closest(".srow"); if (li) filterTeam(li.dataset.t); });
+  standEl.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("srow")) { e.preventDefault(); filterTeam(e.target.dataset.t); } });
+
+  // ---------- Ticket ----------
+  function paint(panel, t, isHome) {
+    const T = TEAMS[t];
+    const band = panel.querySelector(".tk-band");
+    band.style.setProperty("--tc", T.c); band.style.setProperty("--tt", T.t);
+    panel.querySelector(".tk-mono").textContent = T.abbr;
+    panel.querySelector(".tk-name").textContent = T.name;
+    panel.querySelector(".tk-rec").textContent = R.rec(t) + " in SEC play";
+    if (panel.dataset.t !== t) {
+      const had = !!panel.dataset.t; panel.dataset.t = t;
+      if (had && !reduce.matches) { panel.classList.remove("reprint"); void panel.offsetWidth; panel.classList.add("reprint"); }
+    }
+  }
+  function why(which) {
+    const tt = R.title, t = which === 1 ? tt.home : tt.away, n = TEAMS[t].name, rec = R.rec(t);
+    const tierSize = R.tiers.find(x => x.includes(t)).length;
+    const tie = tierSize === 2 ? "two-team tie" : tierSize + "-way tie";
+    if (which === 1) {
+      if (tt.how1 === "outright") return "<b>" + esc(n) + "</b> is alone in first at " + rec + ".";
+      if (tt.how1 === "cotie") return "<b>" + esc(n) + "</b> shares first at " + rec + " and takes the No. 1 seed on " + STEP[tt.step1] + " (Step " + tt.step1 + ").";
+      return "<b>" + esc(n) + "</b> comes out of a " + tie + " for first at " + rec + " on " + STEP[tt.step1] + " (Step " + tt.step1 + ").";
+    }
+    if (tt.how2 === "outright") return "<b>" + esc(n) + "</b> is alone in second at " + rec + ".";
+    if (tt.how2 === "cotie") return "<b>" + esc(n) + "</b> shares first at " + rec + "; both co-leaders qualify.";
+    if (tt.how2 === "tie2") return "<b>" + esc(n) + "</b> wins a " + tie + " for second at " + rec + " on " + STEP[tt.step2] + " (Step " + tt.step2 + ").";
+    return "<b>" + esc(n) + "</b> also comes out of the tie for first, qualifying on " + STEP[tt.step2] + " (Step " + tt.step2 + ").";
+  }
+  function updateTicket() {
+    paint(document.getElementById("tkHome"), R.title.home, true);
+    paint(document.getElementById("tkAway"), R.title.away, false);
+    document.getElementById("why1").innerHTML = why(1);
+    document.getElementById("why2").innerHTML = why(2);
+    const left = R.total - R.decided;
+    document.getElementById("tkLeft").innerHTML = left ? "<b>" + left + "</b> " + (left === 1 ? "game" : "games") + " left to pick" : "<b>72</b> games set";
+    document.getElementById("ticket").setAttribute("aria-label", "Projected SEC Championship Game: " + TEAMS[R.title.home].name + " (home) vs. " + TEAMS[R.title.away].name + " (away)");
+  }
+
+  // ---------- Tiebreaker log ----------
+  function updateLog() {
+    const logEl = document.getElementById("log"), flags = document.getElementById("flags");
+    if (!R.log.length) {
+      logEl.innerHTML = '<p class="lg note" style="margin:0">No tiebreaker needed. ' + esc(TEAMS[R.title.home].name) + " and " + esc(TEAMS[R.title.away].name) + " hold first and second outright.</p>";
+    } else {
+      logEl.innerHTML = R.log.map(l => '<div class="lg ' + l.kind + '" style="padding-left:' + (l.depth * 18) + 'px"><span class="st' + (l.step ? "" : " blank") + '">' + (l.step || "") + "</span><span>" + esc(l.text) + "</span></div>").join("");
+    }
+    let f = "";
+    if (R.decided < R.total) f += '<div class="flag info">This is a projection: ' + (R.total - R.decided) + " games are still unpicked, and steps that rely on them can change.</div>";
+    if (R.provisionalE) f += '<div class="flag">Step E used picked games that have no score. Add projected scores in the game list to make it complete.</div>';
+    if (R.usedDraw) f += '<div class="flag">A simulated random draw decided a spot.<button class="btn-quiet" id="redraw">Redraw</button></div>';
+    flags.innerHTML = f;
+    const rd = document.getElementById("redraw"); if (rd) rd.addEventListener("click", () => { state.seed++; commit(); });
+  }
+
+  // ---------- Status, mobile bar ----------
+  function updateStatus() {
+    const left = R.total - R.decided, chg = GAMES.filter(changed).length;
+    document.getElementById("status").innerHTML = "<b>" + FINALS + " of 72</b> conference games are final, through Oct. 31. <b>" + left + "</b> " + (left === 1 ? "game" : "games") + " left to pick." +
+      (chg ? '<span class="changed">You changed ' + chg + (chg === 1 ? " final." : " finals.") + "</span>" : "");
+    document.getElementById("nRem").textContent = GAMES.filter(g => !isFinal(g)).length;
+    document.getElementById("nChg").textContent = chg;
+    const H = TEAMS[R.title.home], A = TEAMS[R.title.away];
+    document.getElementById("mbar").innerHTML = '<span class="lbl">Atlanta</span><span class="chip" style="--tc:' + H.c + ";--tt:" + H.t + '">' + esc(H.abbr) + '</span><span class="lbl">vs.</span><span class="chip" style="--tc:' + A.c + ";--tt:" + A.t + '">' + esc(A.abbr) + "</span>";
+  }
+
+  function commit() {
+    R = compute(state.picks, state.scores, state.seed);
+    save();
+    updateGames(); updateStandings(); updateTicket(); updateLog(); updateStatus();
+    scheduleAnalysis();
+  }
+
+  // ---------- Controls ----------
+  const teamSel = document.getElementById("teamSel");
+  teamSel.innerHTML = '<option value="ALL">All teams</option>' + [...TEAM_IDS].sort((a, b) => TEAMS[a].name.localeCompare(TEAMS[b].name)).map(t => '<option value="' + t + '">' + esc(TEAMS[t].name) + "</option>").join("");
+  teamSel.addEventListener("change", () => { ui.team = teamSel.value; renderGames(); });
+  function setFilter(f, render) {
+    ui.filter = f;
+    document.querySelectorAll("[data-filter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === f));
+    if (render !== false) renderGames();
+  }
+  document.querySelectorAll("[data-filter]").forEach(b => b.addEventListener("click", () => setFilter(b.dataset.filter)));
+  function setTab(t) {
+    ui.tab = t;
+    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+    document.querySelectorAll("[data-panel]").forEach(p => p.classList.toggle("active", p.dataset.panel === t));
+  }
+  document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  const toast = document.getElementById("toast"); let toastTimer = null, undoFn = null;
+  function showToast(msg, fn) {
+    document.getElementById("toastMsg").textContent = msg; undoFn = fn;
+    document.getElementById("toastBtn").hidden = !fn;
+    toast.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 6000);
+  }
+  document.getElementById("toastBtn").addEventListener("click", () => { if (undoFn) undoFn(); undoFn = null; toast.classList.remove("show"); });
+  document.getElementById("startOver").addEventListener("click", () => {
+    const prev = JSON.stringify(state);
+    state = defaults(); ui.open.clear(); commit(); renderGames();
+    showToast("Picks cleared and finals restored.", () => { state = JSON.parse(prev); commit(); renderGames(); });
+  });
+
+  // ---------- Race to Atlanta (simulated odds + exact clinch status) ----------
+  const raceEl = document.getElementById("race"), raceList = document.getElementById("raceList"), progBar = document.getElementById("progBar");
+  let aTok = 0, aTimer = null, A = null;
+  function scheduleAnalysis() {
+    const tok = ++aTok;
+    raceEl.classList.add("busy"); standEl.classList.add("busy"); progBar.style.width = "0%";
+    clearTimeout(aTimer);
+    aTimer = setTimeout(() => {
+      const it = analyze(Object.assign({}, state.picks), Object.assign({}, state.scores), {});
+      (function step() {
+        if (tok !== aTok) return;
+        const t0 = performance.now();
+        while (performance.now() - t0 < 14) {
+          const n = it.next();
+          if (n.done) { A = n.value; renderRace(); raceEl.classList.remove("busy"); standEl.classList.remove("busy"); progBar.style.width = "100%"; return; }
+          progBar.style.width = (n.value && n.value.phase === "sim" ? Math.round(85 * n.value.done / n.value.total) : 92) + "%";
+        }
+        setTimeout(step, 0);
+      })();
+    }, 220);
+  }
+  function statusOf(st) {
+    if (st.reach === false) return { k: "e", t: "Eliminated" };
+    if (st.notNo1 === false) return { k: "z", t: "Clinched No. 1 seed", good: true };
+    if (st.miss === false) return { k: "x", t: "Clinched a spot", good: true };
+    if (st.reach === null || st.miss === null) return { k: "", t: "Status pending" };
+    if (st.destiny === true) return { k: "", t: "Controls own destiny", good: true };
+    if (st.destiny === false) return { k: "", t: "Needs help" };
+    return { k: "", t: "Alive" };
+  }
+  function oddsTxt(x, st) {
+    if (st.reach === false) return "0%";
+    if (st.miss === false) return "100%";
+    if (x < 0.001) return "<0.1%";
+    if (x > 0.999) return ">99.9%";
+    const v = x * 100; return (v < 10 ? v.toFixed(1) : String(Math.round(v))) + "%";
+  }
+  function renderRace() {
+    const n = A.sims;
+    document.getElementById("raceSub").textContent = A.open
+      ? "Chance to reach Atlanta across " + n.toLocaleString() + " simulated finishes of the " + A.open + " unpicked " + (A.open === 1 ? "game" : "games") + ", using ESPN FPI win probabilities. Finals and your picks are locked."
+      : "Every game is decided, so the title game is set.";
+    const alive = TEAM_IDS.filter(t => A.status[t].reach !== false)
+      .sort((a, b) => (A.berth[b] - A.berth[a]) || TEAMS[a].name.localeCompare(TEAMS[b].name));
+    raceList.innerHTML = alive.map(t => {
+      const T = TEAMS[t], st = A.status[t], so = statusOf(st), b = A.berth[t] / n, n1 = A.no1[t] / n;
+      const shownB = st.miss === false ? 1 : b;
+      return '<li class="rr" aria-label="' + esc(T.name + ": " + oddsTxt(b, st) + " to reach Atlanta, " + so.t) + '"><span class="who"><span class="chip" style="--tc:' + T.c + ";--tt:" + T.t + '">' + esc(T.abbr) + '</span><span class="nm">' + esc(T.short) + '</span><span class="st' + (so.good ? " good" : "") + '">' + so.t + '</span></span><span class="pc2">' + oddsTxt(b, st) + '</span><span class="bar" aria-hidden="true"><i class="b1" style="width:' + (shownB * 100).toFixed(1) + '%"></i><i class="b2" style="width:' + (n1 * 100).toFixed(1) + '%"></i></span></li>';
+    }).join("");
+    const out = TEAM_IDS.filter(t => A.status[t].reach === false).map(t => TEAMS[t].name).sort();
+    const pend = TEAM_IDS.filter(t => statusOf(A.status[t]).t === "Status pending").length;
+    document.getElementById("raceFoot").textContent = (out.length ? "Eliminated: " + out.join(", ") + "." : "No team is eliminated yet.") +
+      (pend ? " " + pend + (pend === 1 ? " team’s" : " teams’") + " exact status couldn’t be settled quickly; pick a few more games to resolve it." : "");
+    // standings markers
+    srows.forEach((el, t) => {
+      const so = statusOf(A.status[t]), mk = el.querySelector(".mk");
+      mk.hidden = !so.k; mk.textContent = so.k; mk.className = "mk" + (so.k ? " mk-" + so.k : ""); mk.title = so.k ? so.t : "";
+      el.classList.toggle("out", so.k === "e");
+    });
+    // ticket clinch tags
+    [["tkHome", R.title.home, "No. 1 seed, home team"], ["tkAway", R.title.away, "No. 2 seed, away team"]].forEach(([id, t, base]) => {
+      const st = A.status[t], so = statusOf(st);
+      document.getElementById(id).querySelector(".tk-seed").innerHTML = esc(base) + (so.k === "z" ? '<span class="tk-clinch">Clinched No. 1</span>' : so.k === "x" ? '<span class="tk-clinch">Clinched</span>' : "");
+    });
+  }
+
+  // fill favorites, projection toggle
+  document.getElementById("fillFav").addEventListener("click", () => {
+    const prev = JSON.stringify(state); let n = 0;
+    GAMES.forEach(g => { if (!isFinal(g) && !state.picks[g.id]) { state.picks[g.id] = probHome(g) >= 0.5 ? "H" : "A"; state.scores[g.id] = null; n++; } });
+    if (!n) { showToast("Every remaining game already has a pick.", null); return; }
+    commit();
+    showToast("Picked the FPI favorite in " + n + (n === 1 ? " game." : " games."), () => { state = JSON.parse(prev); commit(); });
+  });
+  const projBtn = document.getElementById("projToggle");
+  projBtn.addEventListener("click", () => { ui.proj = !ui.proj; projBtn.setAttribute("aria-pressed", ui.proj); updateGames(); });
+
+  // sources table
+  (function () {
+    const tb = document.querySelector("#srcTable tbody");
+    tb.innerHTML = GAMES.filter(g => !isFinal(g)).map(g => {
+      const pi = projInfo(g); const fav = pi.pH >= 0.5 ? g.h : g.a;
+      return "<tr><td>" + esc(TEAMS[g.a].name + (g.site ? " vs. " : " at ") + TEAMS[g.h].name) + "</td><td>" + esc(TEAMS[fav].name) + '</td><td class="num">' + fmtP(Math.max(pi.pH, 1 - pi.pH)) + "</td><td>" + esc(pi.src + (pi.weak ? " (lower confidence)" : "")) + "</td><td>" + esc(pi.est ? "Ratings after Week 9" : pi.d) + "</td></tr>";
+    }).join("");
+  })();
+
+  // punch the ticket notches where the perforation sits (vertical on desktop, horizontal on mobile)
+  const ticketEl = document.getElementById("ticket"), stubEl = ticketEl.querySelector(".tk-stub");
+  const mq = window.matchMedia("(max-width: 899px)");
+  function placeHoles() {
+    const st = ticketEl.style;
+    if (mq.matches) { const y = stubEl.offsetTop + "px"; st.setProperty("--h1x", "0px"); st.setProperty("--h1y", y); st.setProperty("--h2x", "100%"); st.setProperty("--h2y", y); }
+    else { const x = stubEl.offsetLeft + "px"; st.setProperty("--h1x", x); st.setProperty("--h1y", "0px"); st.setProperty("--h2x", x); st.setProperty("--h2y", "100%"); }
+  }
+  if ("ResizeObserver" in window) new ResizeObserver(placeHoles).observe(ticketEl);
+  window.addEventListener("resize", placeHoles);
+
+  // mobile bar visibility
+  const mbar = document.getElementById("mbar");
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(es => es.forEach(en => mbar.classList.toggle("show", !en.isIntersecting))).observe(document.getElementById("ticket"));
+  }
+  mbar.addEventListener("click", () => window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" }));
+
+  // first paint
+  R = compute(state.picks, state.scores, state.seed);
+  renderGames(); updateStandings(); updateTicket(); updateLog(); updateStatus();
+  scheduleAnalysis();
+})();
+</script>
+</body>
+</html>
