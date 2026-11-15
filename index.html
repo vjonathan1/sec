@@ -347,11 +347,21 @@ details.about p{font-size:.86rem;color:var(--ink-2);margin:10px 0 0;max-width:62
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}
 }
+  .top-nav{display:flex;justify-content:flex-end;margin:-16px 0 14px}
+.flow-link{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.2);color:var(--field-ink);
+  font-weight:600;font-size:.92rem;text-decoration:none;
+  transition:background-color 160ms,color 160ms,border-color 160ms}
+.flow-link:hover{background:var(--gold);border-color:var(--gold);color:var(--on-gold,#241900)}
+@media (max-width: 899px){.top-nav{margin-top:-8px}}
 </style>
 </head>
 <body>
 <header class="field">
   <div class="wrap">
+    <nav class="top-nav" aria-label="Related pages">
+      <a class="flow-link" href="flow-ala.html">Explore Alabama's Scenarios</a>
+    </nav>
     <div class="hero-top">
       <div>
         <h1>Who’s going to Atlanta?</h1>
