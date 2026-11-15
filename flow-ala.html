@@ -905,25 +905,71 @@ const OUTCOMES_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAVQAAAFUAAABVAAAAVQAAAAAAAAAAAAAAAA
   const W = {}, L = {}; TEAM_IDS.forEach(t => { W[t] = 0; L[t] = 0; });
   GAMES.forEach(g => { if (g.fa != null) { const a = g.fa > g.fh; W[a ? g.a : g.h]++; L[a ? g.h : g.a]++; } });
 
+    // ---------- results played since this chart was built ----------
+  // Add one line per finished game: game number (see list), then
+  // "A" if the first-listed (visiting) team won or "H" if the home team won.
+  const NEW_RESULTS = {
+    // 56: "H",   // Texas at LSU: LSU won
+    /*Nov 14: 
+        53 S. Carolina at Arkansas    54 Missouri at Georgia    55 Florida at Kentucky
+        56 Texas at LSU               57 Auburn at Miss. St.    58 Ole Miss at Oklahoma
+        59 Tennessee at Texas A&M     60 Alabama at Vanderbilt
+        
+Nov 21: 61 Vanderbilt at Florida      62 Kentucky at Missouri   63 Texas A&M at Oklahoma
+        64 Georgia at S. Carolina     65 LSU at Tennessee       66 Arkansas at Texas
+        
+Nov 27–28: 67 Miss. St. at Ole Miss   68 Texas at Texas A&M     69 Auburn at Alabama
+           70 LSU at Arkansas         71 Oklahoma at Missouri   72 Tennessee at Vanderbilt */
+    
+    53: "H"; // SC
+    54: "H";
+    55: "A";
+    56: "A";
+    57: "A";
+
+    59: "A";
+    60: "A";
+  
+  };
+  let BASE_FM = 0, BASE_FV = 0, KNOWN_N = 0;
+  for (const [id, side] of Object.entries(NEW_RESULTS)) {
+    const i = OPEN.findIndex(g => g.id === +id);
+    if (i < 0 || (side !== "A" && side !== "H")) continue;
+    BASE_FM |= 1 << i; if (side === "H") BASE_FV |= 1 << i; KNOWN_N++;
+    const b = side === "H" ? 1 : 0; W[winner(i, b)]++; L[loser(i, b)]++;
+  }
+  const isKnown = i => (BASE_FM >> i) & 1;
+  const keep = SCEN.filter(sc => sc.conds.every(([i, b]) => !isKnown(i) || ((BASE_FV >> i) & 1) === b)).map(sc => {
+    const conds = sc.conds.filter(([i]) => !isKnown(i));
+    return { conds, path: sc.path.filter(([i]) => !isKnown(i)), p: conds.reduce((x, c) => x * pOf(...c), 1) };
+  }).filter(sc => sc.conds.length).sort((a, b) => b.p - a.p);
+  SCEN.splice(0, SCEN.length, ...keep);
+
   // ---------- header facts + Alabama's own games ----------
-  const rootSt = model.analyze(0, 0);
+  const rootSt = model.analyze(BASE_FM, BASE_FV);
   const own = [[0, 1, "Wins both", "7–2"], [0, 0, "Beats Vanderbilt, loses to Auburn", "6–3"], [1, 1, "Loses at Vanderbilt, beats Auburn", "6–3"], [1, 0, "Loses both", "5–4"]];
-  // bit for iV: 1 = Vanderbilt (home) wins; bit for iA: 1 = Alabama (home) wins
-  const ownStats = own.map(([v, a, t, rec]) => { const fm = (1 << iV) | (1 << iA), fv = (v ? 1 << iV : 0) | (a ? 1 << iA : 0); const st = model.analyze(fm, fv); return { t, rec, p: pOf(iV, v) * pOf(iA, a), st }; });
+  const ownStats = own.map(([v, a, t, rec]) => {
+    const fm = (1 << iV) | (1 << iA), fv = (v ? 1 << iV : 0) | (a ? 1 << iA : 0);
+    if ((fv ^ BASE_FV) & fm & BASE_FM) return { t, rec, gone: true };
+    return { t, rec, st: model.analyze(fm | BASE_FM, fv | BASE_FV), p: (isKnown(iV) ? 1 : pOf(iV, v)) * (isKnown(iA) ? 1 : pOf(iA, a)) };
+  });
+  const alaLeft = [iV, iA].filter(i => !isKnown(i)).length, win2 = ownStats[0];
+  const big = st => st.leaf === "in" ? "In" : st.leaf === "out" ? "Out" : pct(st.pIn);
   document.getElementById("facts").innerHTML =
-    '<div class="fact"><b>' + W.ALA + "–" + L.ALA + '</b><span>Alabama in SEC play, two games left</span></div>' +
-    '<div class="fact"><b>' + pct(rootSt.pIn) + '</b><span>Chance to reach Atlanta</span></div>' +
-    '<div class="fact"><b>' + pct(ownStats[0].st.pIn) + '</b><span>Chance if it wins both, so it needs help</span></div>';
-  document.getElementById("own").innerHTML = ownStats.map(o =>
-    '<div class="card oc"><span class="t">' + esc(o.t) + '</span><span class="s">' + o.rec + " finish, " + pct(o.p) + ' likely</span><span class="v">' + pct(o.st.pIn) + '</span><span class="vl">Alabama reaches Atlanta</span><span class="minibar"><i style="width:' + (o.st.pIn * 100).toFixed(1) + '%"></i></span></div>').join("");
-  document.getElementById("mExact").textContent = "Alabama has two games left and the SEC has " + N + " conference games left in all, so there are " + M.toLocaleString() + " possible ways the rest of the season can go. Every one of them was checked; nothing here is simulated.";
+    '<div class="fact"><b>' + W.ALA + "–" + L.ALA + '</b><span>Alabama in SEC play, ' + (alaLeft ? alaLeft + (alaLeft === 1 ? " game" : " games") + " left" : "season complete") + '</span></div>' +
+    '<div class="fact"><b>' + big(rootSt) + '</b><span>Chance to reach Atlanta</span></div>' +
+    '<div class="fact"><b>' + (win2.gone ? "n/a" : big(win2.st)) + '</b><span>' + (win2.gone ? "Alabama can no longer win both" : win2.st.leaf === "in" ? "If it wins out, so it controls its own fate" : "Chance if it wins out, so it needs help") + '</span></div>';
+  document.getElementById("own").innerHTML = ownStats.map(o => o.gone
+    ? '<div class="card oc"><span class="t">' + esc(o.t) + '</span><span class="s">Ruled out by results</span></div>'
+    : '<div class="card oc"><span class="t">' + esc(o.t) + '</span><span class="s">' + o.rec + " finish, " + pct(o.p) + ' likely</span><span class="v">' + big(o.st) + '</span><span class="vl">Alabama reaches Atlanta</span><span class="minibar"><i style="width:' + (o.st.leaf === "in" ? 100 : o.st.pIn * 100).toFixed(1) + '%"></i></span></div>').join("");
+  document.getElementById("mExact").textContent = "The SEC has " + (N - KNOWN_N) + " conference games left, so there are " + Math.pow(2, N - KNOWN_N).toLocaleString() + " possible ways the rest of the season can go. Every one of them was checked; nothing here is simulated.";
 
   // ---------- tree state ----------
   let uid = 0;
   const nodes = new Map();
   function makeNode(parent, i, b) {
-    const fm = parent ? parent.fm | (1 << i) : 0;
-    const fv = parent ? (b ? parent.fv | (1 << i) : parent.fv) : 0;
+    const fm = parent ? parent.fm | (1 << i) : BASE_FM;
+    const fv = parent ? (b ? parent.fv | (1 << i) : parent.fv) : BASE_FV;
     const n = { id: ++uid, parent, fm, fv, depth: parent ? parent.depth + 1 : 0, cond: parent ? [i, b] : null,
       pathP: parent ? parent.pathP * pOf(i, b) : 1, st: model.analyze(fm, fv), split: null, kids: null, expanded: false, el: null, y: 0 };
     nodes.set(n.id, n);
@@ -966,7 +1012,7 @@ const OUTCOMES_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAVQAAAFUAAABVAAAAVQAAAAAAAAAAAAAAAA
   function cardHTML(n) {
     const st = n.st;
     let head, main, foot, cls;
-    if (!n.parent) head = '<span class="ncond">Today, after Week 10</span><span class="np">' + W.ALA + "–" + L.ALA + "</span>";
+    if (!n.parent) head = '<span class="ncond">Today, after Week 11</span><span class="np">' + W.ALA + "–" + L.ALA + "</span>";
     else head = '<span class="ncond">' + esc(outcome(...n.cond)) + '</span><span class="np">' + pct(pOf(...n.cond), 0) + "</span>";
     if (st.leaf === "in") { cls = "leaf-in"; main = '<span class="nlab">Alabama is in</span><span class="nval">In</span>'; foot = '<span class="nx">Clinched on this path</span><span>' + pct(n.pathP, n.pathP < 0.01 ? 2 : 1) + "</span>"; }
     else if (st.leaf === "out") { cls = "leaf-out"; main = '<span class="nlab">Alabama is out</span><span class="nval">Out</span>'; foot = '<span class="nx">Eliminated on this path</span><span>' + pct(n.pathP, n.pathP < 0.01 ? 2 : 1) + "</span>"; }
@@ -1045,9 +1091,9 @@ const OUTCOMES_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAVQAAAFUAAABVAAAAVQAAAAAAAAAAAAAAAA
   function renderDetail() {
     const n = selected, st = n.st, conds = pathConds(n);
     let h = "<h3>" + (n.parent ? "This path" : "Where Alabama stands today") + "</h3>";
-    h += '<ul class="conds">' + (conds.length ? conds.map(([i, b]) => "<li><b>" + esc(outcome(i, b)) + "</b><span>" + fd(OPEN[i].d) + ", " + pct(pOf(i, b), 0) + "</span></li>").join("") : '<li class="none">No results assumed yet. All ' + N + " remaining games are open.</li>") + "</ul>";
-    h += '<div class="stats"><div class="stat"><b>' + (n.parent ? pct(n.pathP, n.pathP < 0.01 ? 2 : 1) : M.toLocaleString()) + '</b><span>' + (n.parent ? "Chance this path happens" : "Possible ways the season can finish") + '</span></div><div class="stat"><b>' + (st.leaf === "in" ? "In" : st.leaf === "out" ? "Out" : pct(st.pIn)) + "</b><span>Alabama reaches Atlanta" + (st.pEF > 0 && !st.leaf ? ", plus " + pct(st.pEF, 2) + " via Step E or a draw" : "") + "</span></div></div>";
-    const freeN = N - conds.length;
+    h += '<ul class="conds">' + (conds.length ? conds.map(([i, b]) => "<li><b>" + esc(outcome(i, b)) + "</b><span>" + fd(OPEN[i].d) + ", " + pct(pOf(i, b), 0) + "</span></li>").join("") : '<li class="none">No results assumed yet. All ' + (N - KNOWN_N) + " remaining games are open.</li>") + "</ul>";
+    h += '<div class="stats"><div class="stat"><b>' + (n.parent ? pct(n.pathP, n.pathP < 0.01 ? 2 : 1) : Math.pow(2, N - KNOWN_N).toLocaleString()) + '</b><span>' + (n.parent ? "Chance this path happens" : "Possible ways the season can finish") + '</span></div><div class="stat"><b>' + (st.leaf === "in" ? "In" : st.leaf === "out" ? "Out" : pct(st.pIn)) + "</b><span>Alabama reaches Atlanta" + (st.pEF > 0 && !st.leaf ? ", plus " + pct(st.pEF, 2) + " via Step E or a draw" : "") + "</span></div></div>";
+    const freeN = N -KNOWN_N - conds.length;
     if (st.leaf === "in") h += '<p class="verdict in">Alabama is in. All ' + Math.pow(2, freeN).toLocaleString() + " ways the other " + freeN + " games can go send Alabama to Atlanta.</p>";
     else if (st.leaf === "out") h += '<p class="verdict">Alabama is out. None of the ' + Math.pow(2, freeN).toLocaleString() + " ways the other " + freeN + " games can go send Alabama to Atlanta.</p>";
     else if (st.leaf === "ef") h += '<p class="verdict">Every remaining combination ends in a tie that Step E (scoring margin) or a random draw settles, so it can’t be called yet.</p>';
