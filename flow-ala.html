@@ -229,16 +229,11 @@ details.method th,details.method td{text-align:left;padding:4px 8px;border-botto
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}
 }
-/* Games to watch: favorite vs. upset tags */
-.watch .root .rt{display:block}
-.rt-tag{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:999px;font-size:.72rem;font-weight:700;line-height:1.5;border:1px solid transparent;white-space:nowrap}
-.rt-tag.fav{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
-.rt-tag.upset{background:var(--crim-soft);color:var(--focus);border-color:var(--edge)}
-.rt-tag.toss{background:transparent;color:var(--ink-2);border:1px dashed var(--ink-3)}
-.watch tr.rt-upset td:first-child{box-shadow:inset 3px 0 0 var(--edge)}
-.rt-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin:-4px 0 12px;font-size:.82rem;color:var(--ink-2)}
-.rt-key .rt-tag{margin:0 5px 0 0}
-  
+/* Games to watch: sort toggle */
+.wsort{display:inline-flex;margin-left:auto;border:1px solid var(--line);border-radius:9px;padding:2px;background:var(--surface)}
+.wsort button{border:0;background:transparent;padding:4px 10px;border-radius:7px;font-size:.78rem;font-weight:600;color:var(--ink-2);cursor:pointer}
+.wsort button[aria-pressed="true"]{background:var(--crim);color:var(--crim-ink)}
+.watch th.sorted{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -1228,18 +1223,27 @@ Nov 27–28: 67 Miss. St. at Ole Miss   68 Texas at Texas A&M     69 Auburn at A
   (function () {
     const TOSSUP = 0.55;   // a favorite under 55% counts as a toss-up; set to 0.5 to turn toss-ups off
     const LABEL = { fav: "Favorite", upset: "Upset", toss: "Toss-up" };
-    const rows = model.candidates(rootSt).sort((a, b) => b.swing - a.swing);
-    const maxS = rows.length && rows[0].swing > 0 ? rows[0].swing : 1;
-    const count = { fav: 0, upset: 0, toss: 0 };
-    document.getElementById("watch").innerHTML = '<thead><tr><th>Game</th><th>Root for</th><th class="num">If they win</th><th class="num hide-sm">If not</th><th class="num">Swing</th></tr></thead><tbody>' + rows.map(c => {
+    const MON = { Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
+    const when = g => { const [m, d] = g.d.split(" "); return (MON[m] || 0) * 100 + parseInt(d, 10); };
+    const rows = model.candidates(rootSt).map(c => {
       const g = OPEN[c.i], better = c.pInH >= c.pInA ? 1 : 0, fav = g.pH >= 0.5 ? 1 : 0;
-      const kind = Math.max(g.pH, 1 - g.pH) < TOSSUP ? "toss" : better === fav ? "fav" : "upset";
-      count[kind]++;
-      return '<tr class="rt-' + kind + '"><td><span class="gm">' + esc(gameName(c.i)) + '</span><span class="dt">' + fd(g.d) + ", FPI favors " + esc(T(winner(c.i, fav)).short) + " " + pct(pOf(c.i, fav), 0) + (g.kind === "est" ? ' <span class="est">(estimate)</span>' : "") + '</span></td><td class="root"><span class="rt">' + esc(T(winner(c.i, better)).short) + '</span><span class="rt-tag ' + kind + '">' + LABEL[kind] + '</span></td><td class="num">' + pct(better ? c.pInH : c.pInA) + '</td><td class="num hide-sm">' + pct(better ? c.pInA : c.pInH) + '</td><td class="num"><span class="swing"><i style="width:' + Math.max(3, 60 * c.swing / maxS).toFixed(0) + 'px"></i>' + (c.swing * 100).toFixed(1) + "</span></td></tr>";
-    }).join("") + "</tbody>";
+      return Object.assign({}, c, { g, better, fav, kind: Math.max(g.pH, 1 - g.pH) < TOSSUP ? "toss" : better === fav ? "fav" : "upset" });
+    });
+    const maxS = rows.reduce((m, r) => Math.max(m, r.swing), 0) || 1;
+    const count = { fav: 0, upset: 0, toss: 0 }; rows.forEach(r => count[r.kind]++);
+    const table = document.getElementById("watch");
+    function draw(by) {
+      const list = rows.slice().sort(by === "date" ? (a, b) => when(a.g) - when(b.g) || b.swing - a.swing : (a, b) => b.swing - a.swing);
+      table.innerHTML = '<thead><tr><th' + (by === "date" ? ' class="sorted" aria-sort="ascending"' : "") + '>Game</th><th>Root for</th><th class="num">If they win</th><th class="num hide-sm">If not</th><th class="num' + (by === "swing" ? ' sorted" aria-sort="descending"' : '"') + '>Swing</th></tr></thead><tbody>' + list.map(c =>
+        '<tr class="rt-' + c.kind + '"><td><span class="gm">' + esc(gameName(c.i)) + '</span><span class="dt">' + fd(c.g.d) + ", FPI favors " + esc(T(winner(c.i, c.fav)).short) + " " + pct(pOf(c.i, c.fav), 0) + (c.g.kind === "est" ? ' <span class="est">(estimate)</span>' : "") + '</span></td><td class="root"><span class="rt">' + esc(T(winner(c.i, c.better)).short) + '</span><span class="rt-tag ' + c.kind + '">' + LABEL[c.kind] + '</span></td><td class="num">' + pct(c.better ? c.pInH : c.pInA) + '</td><td class="num hide-sm">' + pct(c.better ? c.pInA : c.pInH) + '</td><td class="num"><span class="swing"><i style="width:' + Math.max(3, 60 * c.swing / maxS).toFixed(0) + 'px"></i>' + (c.swing * 100).toFixed(1) + "</span></td></tr>").join("") + "</tbody>";
+      document.querySelectorAll("#watchKey [data-sort]").forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.sort === by));
+    }
     const old = document.getElementById("watchKey"); if (old) old.remove();
-    document.getElementById("watch").parentElement.insertAdjacentHTML("beforebegin",
-      '<p class="rt-key" id="watchKey">' + ["fav", "upset", "toss"].filter(k => count[k]).map(k => '<span><span class="rt-tag ' + k + '">' + LABEL[k] + "</span>" + count[k] + (count[k] === 1 ? " game" : " games") + "</span>").join("") + "</p>");
+    table.parentElement.insertAdjacentHTML("beforebegin",
+      '<div class="rt-key" id="watchKey">' + ["fav", "upset", "toss"].filter(k => count[k]).map(k => '<span><span class="rt-tag ' + k + '">' + LABEL[k] + "</span>" + count[k] + (count[k] === 1 ? " game" : " games") + "</span>").join("") +
+      '<span class="wsort" role="group" aria-label="Sort games"><button type="button" data-sort="swing">Biggest swing</button><button type="button" data-sort="date">Date</button></span></div>');
+    document.getElementById("watchKey").addEventListener("click", e => { const b = e.target.closest("[data-sort]"); if (b) draw(b.dataset.sort); });
+    draw("swing");
   })();
 
   // ---------- clinch scenarios ----------
