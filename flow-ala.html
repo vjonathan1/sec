@@ -229,6 +229,16 @@ details.method th,details.method td{text-align:left;padding:4px 8px;border-botto
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}
 }
+  /* Games to watch: favorite vs. upset tags */
+.watch .root .rt{display:block}
+.rt-tag{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:999px;font-size:.72rem;font-weight:700;line-height:1.5;border:1px solid transparent;white-space:nowrap}
+.rt-tag.fav{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
+.rt-tag.upset{background:var(--crim-soft);color:var(--focus);border-color:var(--edge)}
+.rt-tag.toss{background:transparent;color:var(--ink-2);border:1px dashed var(--ink-3)}
+.watch tr.rt-upset td:first-child{box-shadow:inset 3px 0 0 var(--edge)}
+.rt-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin:-4px 0 12px;font-size:.82rem;color:var(--ink-2)}
+.rt-key .rt-tag{margin:0 5px 0 0}
+  
 /* Games to watch: sort toggle */
 .wsort{display:inline-flex;margin-left:auto;border:1px solid var(--line);border-radius:9px;padding:2px;background:var(--surface)}
 .wsort button{border:0;background:transparent;padding:4px 10px;border-radius:7px;font-size:.78rem;font-weight:600;color:var(--ink-2);cursor:pointer}
