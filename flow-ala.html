@@ -1166,7 +1166,7 @@ Nov 27–28: 67 Miss. St. at Ole Miss   68 Texas at Texas A&M     69 Auburn at A
     else if (st.leaf === "out") h += '<p class="verdict">Alabama is out. None of the ' + Math.pow(2, freeN).toLocaleString() + " ways the other " + freeN + " games can go send Alabama to Atlanta.</p>";
     else if (st.leaf === "ef") h += '<p class="verdict">Every remaining combination ends in a tie that Step E (scoring margin) or a random draw settles, so it can’t be called yet.</p>';
     else {
-      const cands = model.candidates(st).filter(c => c.swing > 0.0005).sort((a, b) => b.swing - a.swing).slice(0, 6);
+      const cands = model.candidates(st).sort((a, b) => b.swing - a.swing);
       const cur = splitOf(n);
       h += '<p class="verdict">Alabama is in on ' + pct(st.pIn) + " of the weighted outcomes from here. These games move that number the most:</p>";
       h += '<ul class="cands">' + cands.map(c => {
